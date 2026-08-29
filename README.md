@@ -22,3 +22,26 @@ Lab-specific VM images are intentionally excluded and deployed separately.
 ## License
 
 Licensed under the GNU General Public License v3.0. See `LICENSE`.
+
+## Build the browser VM
+
+This lab uses the `basic-compression-networking` configuration from
+[`giacobe/buildroot-builder2`](https://github.com/giacobe/buildroot-builder2),
+validated with Buildroot `2025.02.15`:
+
+```sh
+git clone https://github.com/giacobe/buildroot-builder2.git
+cd buildroot-builder2
+BUILDROOT_VERSION=2025.02.15 scripts/01-setup-buildroot.sh
+scripts/02-build-baseline.sh --config basic-compression-networking
+scripts/03-package-payload.sh \
+  --repo https://github.com/giacobe/polylinux-networking.git \
+  --ref main \
+  --baseline artifacts/basic-compression-networking-<timestamp> \
+  --output artifacts/polylinux-networking \
+  --output-prefix polylinux-networking
+```
+
+Replace `<timestamp>` with the stage-2 artifact directory. Review the manifest,
+verify the required networking commands, and boot-test the exact image pair in
+v86 before publishing.
