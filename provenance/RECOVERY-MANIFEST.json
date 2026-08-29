@@ -1,0 +1,125 @@
+{
+  "source_archive": "lab9-packaged.rootfs.cpio.gz",
+  "source_sha256": "e03329b87c5cb5afd2d90ec92eb76167d01b895febf9475bc8f760d716074e21",
+  "archive_entries": 2756,
+  "root_entries": 13,
+  "entries": [
+    {
+      "path": ".profile",
+      "mode": "0644",
+      "uid": 0,
+      "gid": 0,
+      "size": 678,
+      "type": "file",
+      "sha256": "d1b3a3f5db9b93beeca7326cf78526fcd64b227239e160a7a725feff57705cde"
+    },
+    {
+      "path": "basic1.sh",
+      "mode": "0755",
+      "uid": 0,
+      "gid": 0,
+      "size": 616,
+      "type": "file",
+      "sha256": "9da93a28951f679cfa3efd6fb8c240b6468bada22bf3241c8e612bd4352e1da9"
+    },
+    {
+      "path": "basic2.sh",
+      "mode": "0755",
+      "uid": 0,
+      "gid": 0,
+      "size": 678,
+      "type": "file",
+      "sha256": "0d73ad5c57f2e898e7a1acdbdbaa7af6de8004002c7b3fdd8f3ba02345fc036a"
+    },
+    {
+      "path": "basic3.sh",
+      "mode": "0755",
+      "uid": 0,
+      "gid": 0,
+      "size": 611,
+      "type": "file",
+      "sha256": "e3f3873dd0c77b69dff3e826c88cccd16254c5502286bfbd7ff8eb8dd37c4bc2"
+    },
+    {
+      "path": "basic4.sh",
+      "mode": "0755",
+      "uid": 0,
+      "gid": 0,
+      "size": 575,
+      "type": "file",
+      "sha256": "c429d285af24b24c815e1edd4a1d5fcd2560c30b10384b0bb8997d5dfc094897"
+    },
+    {
+      "path": "basic5.sh",
+      "mode": "0755",
+      "uid": 0,
+      "gid": 0,
+      "size": 820,
+      "type": "file",
+      "sha256": "0aab2988b23291aa8ff3abcc32e77ce1f14c9804707b347bbf6714864191b20d"
+    },
+    {
+      "path": "basic6.sh",
+      "mode": "0755",
+      "uid": 0,
+      "gid": 0,
+      "size": 539,
+      "type": "file",
+      "sha256": "2d7d920f21ef358d6d400c2307d0524c916393f55c3d9480d1ff8390e50ba21b"
+    },
+    {
+      "path": "basic7.sh",
+      "mode": "0755",
+      "uid": 0,
+      "gid": 0,
+      "size": 811,
+      "type": "file",
+      "sha256": "a8a1a01196a555824926b966112393e7aff0fe413618753cdd9bc74215c6332e"
+    },
+    {
+      "path": "basic8.sh",
+      "mode": "0755",
+      "uid": 0,
+      "gid": 0,
+      "size": 686,
+      "type": "file",
+      "sha256": "59b9e6caf1f24555c0e9f9872e6f168d7ed6daa523999760dd4a8ad1e61b9f43"
+    },
+    {
+      "path": "install.sh",
+      "mode": "0755",
+      "uid": 0,
+      "gid": 0,
+      "size": 1857,
+      "type": "file",
+      "sha256": "80fe7d63042b45129ef5d3cb3e768f819d7c14f9e25a4b47f5e74db62b2a806d"
+    },
+    {
+      "path": "nextlevel",
+      "mode": "0644",
+      "uid": 0,
+      "gid": 0,
+      "size": 227,
+      "type": "file",
+      "sha256": "427941bf266765efc52f82d22c22bd0631d46301aa7eea5168e8b2ba38b7440f"
+    },
+    {
+      "path": "prevlevel",
+      "mode": "0644",
+      "uid": 0,
+      "gid": 0,
+      "size": 308,
+      "type": "file",
+      "sha256": "3007aa44be3052b37b69a7b6ac49031a69e51155994bba6228c45161ee15b50b"
+    },
+    {
+      "path": "profile",
+      "mode": "0644",
+      "uid": 0,
+      "gid": 0,
+      "size": 674,
+      "type": "file",
+      "sha256": "c8470401ee59c53249b87162a059e27b4416acd05fe751aefbb01200356d2705"
+    }
+  ]
+}

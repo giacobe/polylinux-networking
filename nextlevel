@@ -1,0 +1,10 @@
+#!/bin/sh
+text=""
+digits=""
+for char in $(echo "$USER" | sed 's/[^a-zA-Z]//g'); do
+	text="${text}${char}"
+done
+for char in $(echo "$USER" | sed 's/[^0-9]//g'); do
+	digits="${digits}${char}"
+done
+su - $text$(expr "$digits" + 1)
