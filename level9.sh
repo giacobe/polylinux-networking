@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 
+. "$INSTALL_ROOT/polylinux-common.sh"
+
 target="203.0.113.$((40 + THEME_INDEX))"
 gateway="192.0.2.$((1 + THEME_INDEX))"
 metric=$((100 + THEME_INDEX))

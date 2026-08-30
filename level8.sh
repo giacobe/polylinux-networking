@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 
+. "$INSTALL_ROOT/polylinux-common.sh"
+
 host="$(theme_variant host 8).lab.test"
 address="192.0.2.$((20 + THEME_INDEX))"
 aliases="$(theme_field service) $(theme_field project)"
