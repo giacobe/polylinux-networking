@@ -9,7 +9,7 @@
 - Recovered boundary: `/root`
 
 The baseline image contains no `/root` payload. The packaged image adds the
-installer, `basic1.sh` through `basic8.sh`, profile, and navigation helpers.
+installer, `level1.sh` through `level8.sh`, profile, and navigation helpers.
 All 12 assessed payload files match the local staged networking prototype
 exactly. The original packaged `/root` entry manifest is retained at
 `provenance/RECOVERY-MANIFEST.json`.

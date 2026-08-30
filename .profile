@@ -27,4 +27,4 @@ ip addr add 192.168.50.$VM1_OCTET/24 dev eth0
 ip link set eth0 up
 ip route add default via 192.168.50.1
 
-su -l basic1
+su -l level1

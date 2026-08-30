@@ -1,6 +1,6 @@
 #!/bin/sh
 cd /home
-echo "* level 8: Final Challenge		*" >> $readMeLocation
+echo "* Level 10: Final Challenge		*" >> $readMeLocation
 echo "***************************************" >> $readMeLocation
 echo "* Retrieve the hidden flag from the remote machine.	*" >> $readMeLocation
 echo "* 							*" >> $readMeLocation
