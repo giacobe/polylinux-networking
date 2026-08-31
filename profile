@@ -10,5 +10,4 @@ echo "* gain access to Avengers tower and we need you to see whats going on. *"
 echo "* To change to the next level, type the command 'nextlevel'.	*"
 echo "* To change to the previous level, type the command 'prevlevel'.	*"
 echo "********************************************************************"
-echo "* Level	: "$USER
 cat README.txt
