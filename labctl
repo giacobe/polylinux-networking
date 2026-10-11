@@ -1,0 +1,48 @@
+#!/bin/sh
+set -eu
+
+INSTALL_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+NETLAB_ROOT=${NETLAB_ROOT:-/run/polylinux-networking}
+export INSTALL_ROOT NETLAB_ROOT
+. "$INSTALL_ROOT/resources.sh"
+
+usage() {
+    printf 'Usage: labctl enter LEVEL | show LEVEL | reset\n' >&2
+    exit 2
+}
+
+valid_level() {
+    case "$1" in 1|2|3|4|5|6|7|8|9|10) ;; *) usage ;; esac
+}
+
+case "${1:-}" in
+    enter)
+        [ "$#" -eq 2 ] || usage
+        valid_level "$2"
+        [ "$(id -u)" -eq 0 ] || die 'enter requires root in this prototype'
+        namespace=$(learner_ns "$2")
+        ip netns list | grep -q "^$namespace\([[:space:]]\|$\)" ||
+            die "level $2 has no live namespace; run install.sh --live"
+        ip netns exec "$namespace" env NETLAB_LEVEL="$2" \
+            NETLAB_ROOT="$NETLAB_ROOT" NETLAB_INSTALL_ROOT="$INSTALL_ROOT" \
+            PATH="$INSTALL_ROOT:$INSTALL_ROOT/bin:$PATH" sh -c '
+                cd "$NETLAB_ROOT/home/level$NETLAB_LEVEL"
+                cat README.txt
+                printf "\nType nextlevel or prevlevel to move between levels.\n"
+                exec sh -i
+            '
+        ;;
+    show)
+        [ "$#" -eq 2 ] || usage
+        valid_level "$2"
+        cat "$(level_home "$2")/README.txt"
+        ;;
+    reset)
+        [ "$#" -eq 1 ] || usage
+        [ "$(id -u)" -eq 0 ] || die 'reset requires root'
+        . "$INSTALL_ROOT/topology.sh"
+        teardown_topology
+        printf 'Lab-owned network namespaces were removed.\n'
+        ;;
+    *) usage ;;
+esac

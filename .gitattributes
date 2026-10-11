@@ -1,6 +1,10 @@
 * text=auto
 *.sh text eol=lf
-profile text eol=lf
-.profile text eol=lf
+*.fragment text eol=lf
+defconfig text eol=lf
+*.txt text eol=lf
 *.md text eol=lf
-*.json text eol=lf
+labctl text eol=lf
+nextlevel text eol=lf
+prevlevel text eol=lf
+bin/udhcpc text eol=lf

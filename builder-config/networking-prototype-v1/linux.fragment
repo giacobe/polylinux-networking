@@ -1,0 +1,9 @@
+# Keep the known-good qemu/x86 base config and add isolated virtual networks.
+CONFIG_NAMESPACES=y
+CONFIG_NET_NS=y
+CONFIG_VETH=y
+CONFIG_PACKET=y
+CONFIG_INET=y
+CONFIG_NETDEVICES=y
+CONFIG_PROC_FS=y
+CONFIG_SYSCTL=y

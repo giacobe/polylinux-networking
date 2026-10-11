@@ -1,15 +1,4 @@
 #!/bin/sh
-cd /home
-echo "* Level 10: Final Challenge		*" >> $readMeLocation
-echo "***************************************" >> $readMeLocation
-echo "* Retrieve the hidden flag from the remote machine.	*" >> $readMeLocation
-echo "* 							*" >> $readMeLocation
-echo "* Commands:						*" >> $readMeLocation
-echo "* - ip route						*" >> $readMeLocation
-echo "* - ping							*" >> $readMeLocation
-echo "* - nmap							*" >> $readMeLocation
-echo "* - curl							*" >> $readMeLocation
-echo "* - wget							*" >> $readMeLocation
-echo "*								*" >> $readMeLocation
-echo "* Question: what is the flag?				*" >> $readMeLocation
-echo "****************************************" >> $readMeLocation
+set -eu
+. "$(dirname "$0")/resources.sh"
+write_level_readme 10

@@ -1,53 +1,56 @@
-# PolyLinux Lab 9: Networking from the Command Line
+# PolyLinux Networking prototype
 
-This repository preserves the eight-level networking prototype recovered from
-an unlinked packaged PolyLinux Lab 9 initrd on 2026-08-29.
+This is a one-VM prototype for ten levels of networking from the command line.
+Levels 1–7 focus on local configuration, Level 8 compares ICMP reachability
+with a local TCP listener, Level 9 traces a named nine-hop route, and Level 10
+resolves and contacts an internal HTTP service.
 
-The source is intentionally preserved as deployed. It is not a complete modern
-PolyLinux lab: it has eight levels, no public participant page, no reference
-solver, and no deterministic automated test suite. Treat it as the baseline for
-a future ten-level implementation.
+The prototype is separate from the recovered eight-level source snapshot in
+`github-sync/polylinux-networking`. It has not been packaged or boot-tested in
+v86. Live installation requires a Linux guest with root access, network
+namespaces, virtual Ethernet, IPv4 forwarding, and the commands in `TOOLSET.md`.
+The current `basic-compression-networking` baseline does not meet that set.
 
-See `PROVENANCE.md` before modifying or repackaging the exercise.
+## Buildroot builder profile
 
-## Repository contents
+The [baseline assessment and build steps](BASELINE.md) identify the missing
+packages and kernel options. The portable config files are in
+[`builder-config/networking-prototype-v1`](builder-config/networking-prototype-v1).
+On the Linux build host, run `sh install-builder-config.sh
+/path/to/buildroot-builder2`, then build with
+`scripts/02-build-baseline.sh --config networking-prototype-v1` using Buildroot
+`2025.02.15`. This creates a candidate baseline; validate the exact image pair
+in v86 before packaging the lab.
 
-- `install.sh` installs the recovered prototype in a compatible PolyLinux guest.
-- `level1.sh` through `level8.sh` generate the eight recovered levels.
-- `profile`, `nextlevel`, and `prevlevel` provide the learner interface.
-- `provenance/RECOVERY-MANIFEST.json` records the recovered `/root` inventory.
-
-Lab-specific VM images are intentionally excluded and deployed separately.
-
-## License
-
-Licensed under the GNU General Public License v3.0. See `LICENSE`.
-
-## Build the browser VM
-
-This lab uses the `basic-compression-networking` configuration from
-[`giacobe/buildroot-builder2`](https://github.com/giacobe/buildroot-builder2),
-validated with Buildroot `2025.02.15`:
+## Generate instructions without changing the network
 
 ```sh
-git clone https://github.com/giacobe/buildroot-builder2.git
-cd buildroot-builder2
-BUILDROOT_VERSION=2025.02.15 scripts/01-setup-buildroot.sh
-scripts/02-build-baseline.sh --config basic-compression-networking
-scripts/03-package-payload.sh \
-  --repo https://github.com/giacobe/polylinux-networking.git \
-  --ref main \
-  --baseline artifacts/basic-compression-networking-<timestamp> \
-  --output artifacts/polylinux-networking \
-  --output-prefix polylinux-networking
+NETLAB_ROOT=/tmp/polylinux-networking-prototype \
+USER_ID=student@example.edu CURRENT_DATE=2026-10-11 \
+sh install.sh --dry-run
 ```
 
-Replace `<timestamp>` with the stage-2 artifact directory. Review the manifest,
-verify the required networking commands, and boot-test the exact image pair in
-v86 before publishing.
+## Run in a disposable Linux guest
 
-## Standard runtime contract
+```sh
+USER_ID=student@example.edu CURRENT_DATE=2026-10-11 sh install.sh --live
+sh labctl enter 1
+```
 
-The current release uses the reversible PolyBandit exercise code, the versioned `seed-v1` deterministic seed, ten concurrent level generators, staged `README.txt` readiness, unrestricted `nextlevel`/`prevlevel` navigation, and no client-side answer store or checker. See `lab.json` for the authoritative level count, theme policy, Buildroot configuration, and browser artifact names.
+Use `nextlevel` and `prevlevel` inside the level shell. Run `sh labctl reset`
+from the parent guest shell to remove only this lab's namespaces. Re-running
+`install.sh --live` resets those same namespaces before rebuilding them.
+Developers can run `sh live-test.sh` after installation to exercise and
+compare all ten live paths; keep that test and `verify.sh` outside any VM
+payload.
 
-Do not rebuild the assigned Buildroot baseline merely to package this lab. Package the repository payload into the configuration named by `buildroot_configuration`, preserve the baseline kernel, and publish the resulting `packaged.bzImage` and `packaged.rootfs.cpio.gz`.
+Live configuration runs as root inside isolated namespaces because `ip link`,
+`ip addr`, `ip route`, and resolver changes require privilege. This is a
+prototype interface; the standard level-account presentation and external
+grader package still need integration before publication.
+
+The level seed is SHA-256 of the exact UTF-8 concatenation of normalized
+email, ISO date, exercise password, and level password, with no separators or
+trailing newline. Labeled sub-hashes set addresses, names, ports, the
+12-character Level 9 code, and its insertion position. No answer key or local
+correctness checker is installed.

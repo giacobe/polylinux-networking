@@ -1,0 +1,5 @@
+# Base BusyBox already enables nslookup and udhcpc; pin these applets here.
+CONFIG_HTTPD=y
+CONFIG_NSLOOKUP=y
+CONFIG_FEATURE_NSLOOKUP_BIG=y
+CONFIG_UDHCPC=y

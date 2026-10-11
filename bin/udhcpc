@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+: "${NETLAB_INSTALL_ROOT:?enter this level with labctl}"
+exec busybox udhcpc -s "$NETLAB_INSTALL_ROOT/dhcp-client.sh" "$@"

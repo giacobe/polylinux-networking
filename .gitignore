@@ -1,3 +1,4 @@
-**/*bzImage
-**/*.cpio.gz
-
+/output/
+/build/
+*.cpio.gz
+bzImage

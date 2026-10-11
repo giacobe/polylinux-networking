@@ -1,0 +1,11 @@
+# Additional Buildroot 2025.02.15 packages for the ten-level networking lab.
+# The installer appends absolute fragment paths for the Linux build host.
+BR2_PACKAGE_IPROUTE2=y
+BR2_PACKAGE_IPUTILS=y
+BR2_PACKAGE_IPUTILS_PING=y
+BR2_PACKAGE_TRACEROUTE=y
+BR2_PACKAGE_DNSMASQ=y
+BR2_PACKAGE_DNSMASQ_DHCP=y
+BR2_PACKAGE_LIBCURL=y
+BR2_PACKAGE_LIBCURL_CURL=y
+BR2_PACKAGE_LIBCURL_TLS_NONE=y

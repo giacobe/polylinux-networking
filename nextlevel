@@ -1,10 +1,5 @@
 #!/bin/sh
-text=""
-digits=""
-for char in $(echo "$USER" | sed 's/[^a-zA-Z]//g'); do
-	text="${text}${char}"
-done
-for char in $(echo "$USER" | sed 's/[^0-9]//g'); do
-	digits="${digits}${char}"
-done
-su - $text$(expr "$digits" + 1)
+set -eu
+number=${NETLAB_LEVEL:-0}
+case "$number" in 1|2|3|4|5|6|7|8|9) ;; 10) echo 'Already at Level 10.'; exit 0 ;; *) echo 'Open a level with labctl first.' >&2; exit 1 ;; esac
+exec sh "$NETLAB_INSTALL_ROOT/labctl" enter "$((number + 1))"
