@@ -216,13 +216,12 @@ EOF
 
 # Called by each independent level script in a private staging directory.
 generate_level() {
-    number=$1
     if [ "${INSTALL_MODE:-dry}" = live ]; then
         . "$INSTALL_ROOT/topology.sh"
-        case "$number" in
+        case "$1" in
             9) setup_story_level ;;
-            *) setup_basic_level "$number" ;;
+            *) setup_basic_level "$1" ;;
         esac
     fi
-    write_level_readme "$number"
+    write_level_readme "$1"
 }

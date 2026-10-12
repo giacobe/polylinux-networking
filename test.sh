@@ -86,6 +86,20 @@ esac
 printf '%s' "$CODE" | grep -Eq '^[0-9a-f]{12}$'
 [ "$INSERT_AFTER" -ge 2 ] && [ "$INSERT_AFTER" -le 6 ]
 
+# The live topology uses `number` while creating routers. It must not change
+# which level's README is generated after topology setup returns.
+mkdir -p "$case_root/mock-topology" "$case_root/mock-level9"
+printf 'setup_story_level() { number=8; }\n' > "$case_root/mock-topology/topology.sh"
+(
+    INSTALL_MODE=live
+    INSTALL_ROOT="$case_root/mock-topology"
+    LEVEL_HOME="$case_root/mock-level9"
+    export INSTALL_MODE INSTALL_ROOT LEVEL_HOME
+    generate_level 9
+)
+grep -Fqx 'Level: level9' "$case_root/mock-level9/README.txt"
+grep -Fq 'Traceroute and reverse DNS' "$case_root/mock-level9/README.txt"
+
 INSTALL_ROOT=$(pwd)
 NETLAB_ROOT="$case_root/story"
 export INSTALL_ROOT NETLAB_ROOT
