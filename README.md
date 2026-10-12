@@ -24,6 +24,11 @@ in v86 before packaging the lab.
 If you previously installed this profile, use `--refresh` and rebuild BusyBox
 as shown in `BASELINE.md`; older images can lack the `httpd` applet.
 
+To make a diagnostic lab image from a validated baseline, run
+`sh package-prototype.sh BUILDER_DIR BASELINE_DIR OUTPUT_DIR`. It stages only
+the runtime files, excluding the developer solver, tests, and builder configs.
+Boot-test the resulting pair before using it with learners.
+
 ## Generate instructions without changing the network
 
 ```sh

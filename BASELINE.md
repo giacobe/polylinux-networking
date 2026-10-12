@@ -104,5 +104,6 @@ in v86 and exercise namespace/veth creation, interface and route changes,
 the DHCP lease, A and PTR lookups, all nine named traceroute hops, the local
 listener in `ss`, and HTTP fetches. Run all ten `live-test.sh` paths in a
 compatible guest. Record results in `manifest/validation-notes.md`. Keep the
-baseline image free of lab payload files; package the lab into `/root` only
-after the baseline passes, then boot-test the packaged pair again.
+baseline image free of lab payload files. Use `package-prototype.sh` to make a
+diagnostic lab image with only runtime files, then boot-test that packaged pair
+in v86. Browser publication requires the complete packaged-image check.

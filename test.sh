@@ -2,7 +2,9 @@
 set -eu
 cd "$(dirname "$0")"
 
-for script in install.sh install-builder-config.sh builder-config/scripts/validate-olddefconfig.sh \
+for script in install.sh install-builder-config.sh package-prototype.sh \
+    builder-config/scripts/validate-olddefconfig.sh \
+    builder-config/scripts/smoke-packaged-rootfs.sh \
     resources.sh topology.sh labctl nextlevel prevlevel \
     live-test.sh verify.sh \
     bin/udhcpc dhcp-client.sh \
