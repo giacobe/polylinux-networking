@@ -10,9 +10,10 @@ case "$USER" in
     *) return 0 ;;
 esac
 expected_ns=pln-l${USER#level}
-current_ns=$(ip netns identify "$$" 2>/dev/null || true)
+current_ns=$(ip netns identify 2>/dev/null || true)
 if [ "$current_ns" != "$expected_ns" ]; then
-    echo "Enter this account with nextlevel or prevlevel." >&2
+    printf 'ERROR: %s login is in network namespace %s (expected %s).\n' \
+        "$USER" "${current_ns:-unidentified}" "$expected_ns" >&2
     exit 1
 fi
 PS1="$USER$ "

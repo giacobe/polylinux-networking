@@ -17,6 +17,15 @@ export INSTALL_ROOT NETLAB_ROOT USER_ID CURRENT_DATE SYSTEM_PASSWORD LEVEL_PASSW
 for number in 1 2 3 4 5 6 7 8 9 10; do
     id "level$number" >/dev/null 2>&1 || die "missing level$number account"
 done
+for number in 1 2 3 4 5 6 7 8 9 10; do
+    login_output=$(ip netns exec "pln-l$number" su - "level$number" -c \
+        'ip netns identify' 2>&1) ||
+        die "level$number login failed: $login_output"
+    login_ns=$(printf '%s\n' "$login_output" | tail -n 1)
+    [ "$login_ns" = "pln-l$number" ] ||
+        die "level$number login reached the wrong namespace: $login_ns"
+done
+printf 'Ten account login and namespace checks passed.\n'
 ip netns exec pln-l9 su -c 'PATH=/usr/local/bin:$PATH ip route replace default via 198.51.100.2 dev e0a' level9 >/dev/null ||
     die 'Level 9 account cannot configure its route through the network helper'
 for number in 1 2 3 4 5 6 7 8 9 10; do
