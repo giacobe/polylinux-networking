@@ -91,6 +91,37 @@ artifact's `configs/final-buildroot.config` for
 `CONFIG_HTTPD=y`, and the guest's `busybox --list` for `httpd`. Repackaging an
 older rootfs without rebuilding BusyBox will reproduce the failure.
 
+### If root login reports missing sudo
+
+The level accounts use narrowly scoped `sudo` helpers to change interfaces,
+addresses, routes, and DHCP state. An older networking baseline built from the
+initial package fragment lacks `sudo`. Removing the installer's command check
+only permits partial exploration; it does not make those levels functional.
+Refresh the installed config set from this repository, then let the human-run
+Builder2 stage 02 build a new baseline:
+
+```sh
+git -C polylinux-networking pull --ff-only
+sh polylinux-networking/install-builder-config.sh --refresh "$PWD/buildroot-builder2"
+cd buildroot-builder2
+scripts/02-build-baseline.sh --config networking-prototype-v1
+```
+
+The commands assume the lab and builder checkouts are siblings and start in
+their parent directory. Before stage 03, confirm that the **new** artifact's
+`configs/final-buildroot.config` contains `BR2_PACKAGE_SUDO=y` and that its
+baseline rootfs contains `sudo`:
+
+```sh
+grep -Fx 'BR2_PACKAGE_SUDO=y' artifacts/networking-prototype-v1-<timestamp>/configs/final-buildroot.config
+python3 ../polylinux-networking/builder-config/scripts/check-rootfs-commands.py \
+  artifacts/networking-prototype-v1-<timestamp>/images/rootfs.cpio.gz \
+  --commands sudo
+```
+
+After packaging, `builder-config/scripts/smoke-packaged-rootfs.sh` also checks
+that `sudo` exists and starts in the packaged rootfs.
+
 Run a command-presence check against the built archive (from the sibling
 `polylinux-networking` checkout):
 
