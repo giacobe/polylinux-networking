@@ -21,6 +21,8 @@ On the Linux build host, run `sh install-builder-config.sh
 `scripts/02-build-baseline.sh --config networking-prototype-v1` using Buildroot
 `2025.02.15`. This creates a candidate baseline; validate the exact image pair
 in v86 before packaging the lab.
+If you previously installed this profile, use `--refresh` and rebuild BusyBox
+as shown in `BASELINE.md`; older images can lack the `httpd` applet.
 
 ## Generate instructions without changing the network
 

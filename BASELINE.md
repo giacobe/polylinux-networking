@@ -48,7 +48,8 @@ revalidating the symbols and fragment behavior.
 
 The profile requests `iproute2` (`ip`, `ss`), `iputils` (`ping`), traceroute,
 dnsmasq with DHCP, and curl without a TLS backend because lab traffic stays
-inside the VM over HTTP. BusyBox supplies `httpd`, `nslookup`, and `udhcpc`.
+inside the VM over HTTP. `BR2_PACKAGE_BUSYBOX_HTTPD=y` forces the BusyBox
+`httpd` applet into the binary; BusyBox also supplies `nslookup` and `udhcpc`.
 The kernel fragment requests `CONFIG_NAMESPACES`, `CONFIG_NET_NS`, and
 `CONFIG_VETH` plus their networking, proc, and sysctl prerequisites.
 
@@ -64,6 +65,30 @@ as `configs/final-linux.config` and `configs/final-busybox.config`; verify the
 requested options survived `olddefconfig` and fragment merging. Also preserve
 the final Buildroot defconfig (`make -C "$BUILDROOT_SRC" O="$BUILD_DIR/networking-prototype-v1" savedefconfig` after sourcing `.polylinux-builder.env`), full build log,
 host/toolchain details, and SHA-256 hashes in the versioned artifact package.
+
+### Refresh an existing profile after the httpd correction
+
+An earlier manually copied profile only requested `CONFIG_HTTPD=y` through a
+BusyBox fragment, but omitted `BR2_PACKAGE_BUSYBOX_CONFIG_FRAGMENT_FILES` and
+`BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES`. Buildroot therefore ignored both
+fragments. The corrected profile includes default-layout relative paths, and
+the installer writes absolute paths for the actual Linux builder location.
+If the built guest says `ERROR: BusyBox httpd applet is required`, pull the
+current lab repository, refresh the installed profile, and rebuild BusyBox:
+
+```sh
+sh polylinux-networking/install-builder-config.sh --refresh "$PWD/buildroot-builder2"
+cd buildroot-builder2
+. ./.polylinux-builder.env
+make -C "$BUILDROOT_SRC" O="$BUILD_DIR/networking-prototype-v1" busybox-dirclean
+scripts/02-build-baseline.sh --config networking-prototype-v1
+```
+
+The command above assumes the two checkouts are siblings. Check the new
+artifact's `configs/final-buildroot.config` for
+`BR2_PACKAGE_BUSYBOX_HTTPD=y`, its generated BusyBox `.config` for
+`CONFIG_HTTPD=y`, and the guest's `busybox --list` for `httpd`. Repackaging an
+older rootfs without rebuilding BusyBox will reproduce the failure.
 
 Run a command-presence check against the built archive (from the sibling
 `polylinux-networking` checkout):

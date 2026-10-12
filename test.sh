@@ -2,7 +2,8 @@
 set -eu
 cd "$(dirname "$0")"
 
-for script in install.sh install-builder-config.sh resources.sh topology.sh labctl nextlevel prevlevel \
+for script in install.sh install-builder-config.sh builder-config/scripts/validate-olddefconfig.sh \
+    resources.sh topology.sh labctl nextlevel prevlevel \
     live-test.sh verify.sh \
     bin/udhcpc dhcp-client.sh \
     level1.sh level2.sh level3.sh level4.sh level5.sh level6.sh level7.sh \
@@ -22,7 +23,14 @@ trap cleanup EXIT HUP INT TERM
 mkdir -p "$case_root/builder/scripts" "$case_root/builder/config-sets"
 : > "$case_root/builder/scripts/02-build-baseline.sh"
 sh install-builder-config.sh "$case_root/builder" >/dev/null
+sh install-builder-config.sh --refresh "$case_root/builder" >/dev/null
 profile_dir="$case_root/builder/config-sets/networking-prototype-v1"
+grep -Fqx 'BR2_PACKAGE_BUSYBOX_HTTPD=y' "$profile_dir/features.fragment"
+[ "$(grep -Fc 'BR2_PACKAGE_BUSYBOX_CONFIG_FRAGMENT_FILES=' "$profile_dir/features.fragment")" -eq 1 ]
+grep -Fqx 'BR2_PACKAGE_BUSYBOX_CONFIG_FRAGMENT_FILES="../../../config-sets/networking-prototype-v1/busybox.fragment"' \
+    builder-config/networking-prototype-v1/features.fragment
+grep -Fqx 'BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="../../../config-sets/networking-prototype-v1/linux.fragment"' \
+    builder-config/networking-prototype-v1/features.fragment
 grep -Fqx "BR2_PACKAGE_BUSYBOX_CONFIG_FRAGMENT_FILES=\"$profile_dir/busybox.fragment\"" \
     "$profile_dir/features.fragment"
 grep -Fqx "BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES=\"$profile_dir/linux.fragment\"" \

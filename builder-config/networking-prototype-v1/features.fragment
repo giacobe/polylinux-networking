@@ -1,5 +1,5 @@
 # Additional Buildroot 2025.02.15 packages for the ten-level networking lab.
-# The installer appends absolute fragment paths for the Linux build host.
+# The installer substitutes absolute fragment paths for the Linux build host.
 BR2_PACKAGE_IPROUTE2=y
 BR2_PACKAGE_IPUTILS=y
 BR2_PACKAGE_IPUTILS_PING=y
@@ -9,3 +9,8 @@ BR2_PACKAGE_DNSMASQ_DHCP=y
 BR2_PACKAGE_LIBCURL=y
 BR2_PACKAGE_LIBCURL_CURL=y
 BR2_PACKAGE_LIBCURL_TLS_NONE=y
+BR2_PACKAGE_BUSYBOX_HTTPD=y
+# These relative paths work with the builder's default work/src layout.
+# install-builder-config.sh replaces them with absolute paths for custom layouts.
+BR2_PACKAGE_BUSYBOX_CONFIG_FRAGMENT_FILES="../../../config-sets/networking-prototype-v1/busybox.fragment"
+BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="../../../config-sets/networking-prototype-v1/linux.fragment"
