@@ -5,7 +5,8 @@ cd "$(dirname "$0")"
 for script in install.sh install-builder-config.sh package-prototype.sh \
     builder-config/scripts/validate-olddefconfig.sh \
     builder-config/scripts/smoke-packaged-rootfs.sh \
-    resources.sh topology.sh labctl nextlevel prevlevel \
+    resources.sh topology.sh labctl .profile profile nextlevel prevlevel \
+    network-ip.sh network-udhcpc.sh bin/ip polylinux-colors.sh \
     live-test.sh verify.sh \
     bin/udhcpc dhcp-client.sh \
     level1.sh level2.sh level3.sh level4.sh level5.sh level6.sh level7.sh \
@@ -39,13 +40,18 @@ grep -Fqx "BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES=\"$profile_dir/linux.fragment\
     "$profile_dir/features.fragment"
 
 USER_ID=student@example.edu CURRENT_DATE=2026-10-11 \
-    NETLAB_ROOT="$case_root/first" sh install.sh --dry-run >/dev/null
+    NETLAB_ROOT="$case_root/first" sh install.sh --dry-run --non-interactive >/dev/null
 USER_ID=student@example.edu CURRENT_DATE=2026-10-11 \
-    NETLAB_ROOT="$case_root/repeat" sh install.sh --dry-run >/dev/null
+    NETLAB_ROOT="$case_root/repeat" sh install.sh --dry-run --non-interactive >/dev/null
 diff -r "$case_root/first/home" "$case_root/repeat/home" >/dev/null
+printf 'invalid\n Student@Example.edu \ny\n' | \
+    CURRENT_DATE=2026-10-11 NETLAB_ROOT="$case_root/interactive" \
+    sh install.sh --dry-run >/dev/null
+grep -q '^Participant: student@example.edu$' \
+    "$case_root/interactive/home/level1/README.txt"
 
 USER_ID=other@example.edu CURRENT_DATE=2026-10-11 \
-    NETLAB_ROOT="$case_root/other" sh install.sh --dry-run >/dev/null
+    NETLAB_ROOT="$case_root/other" sh install.sh --dry-run --non-interactive >/dev/null
 if cmp -s "$case_root/first/home/level2/README.txt" \
     "$case_root/other/home/level2/README.txt"; then
     echo 'changed learner did not vary Level 2 instructions' >&2
@@ -53,7 +59,7 @@ if cmp -s "$case_root/first/home/level2/README.txt" \
 fi
 
 USER_ID=student@example.edu CURRENT_DATE=2026-10-12 \
-    NETLAB_ROOT="$case_root/later" sh install.sh --dry-run >/dev/null
+    NETLAB_ROOT="$case_root/later" sh install.sh --dry-run --non-interactive >/dev/null
 if cmp -s "$case_root/first/home/level10/README.txt" \
     "$case_root/later/home/level10/README.txt"; then
     echo 'changed date did not vary Level 10 instructions' >&2
@@ -89,8 +95,29 @@ write_story_dns
 [ "$(grep -c '^host-record=' "$NETLAB_ROOT/dns/level9.conf")" -eq 9 ]
 [ "$(grep -c '^host-record=polylab[.]code[.]' "$NETLAB_ROOT/dns/level9.conf")" -eq 1 ]
 line=$(grep -n '^host-record=polylab[.]code[.]' "$NETLAB_ROOT/dns/level9.conf" | cut -d : -f 1)
-[ "$line" -eq $((2 * INSERT_AFTER + 7)) ]
+[ "$line" -eq $((INSERT_AFTER + 8)) ]
 grep -q '^address=/trace[.]lab[.]test/198[.]51[.]100[.]34$' \
     "$NETLAB_ROOT/dns/level9.conf"
+! grep -q '^ptr-record=' "$NETLAB_ROOT/dns/level9.conf"
+awk -F, '/^host-record=/ { expected = 4 * count + 2; if ($2 != "198.51.100." expected) exit 1; count++ } END { if (count != 9) exit 1 }' \
+    "$NETLAB_ROOT/dns/level9.conf"
+grep -q 'The next-hop router is' "$case_root/first/home/level9/README.txt"
+[ -f .profile ] && [ -f profile ] && [ -f polylinux-colors.sh ]
+grep -q 'exec sh /root/install.sh' .profile
+grep -q 'su - "level$number"' labctl
+grep -q '^BR2_PACKAGE_SUDO=y$' builder-config/networking-prototype-v1/features.fragment
+
+for file in LICENSE .profile profile polylinux-colors.sh install.sh resources.sh \
+    topology.sh labctl nextlevel prevlevel network-ip.sh network-udhcpc.sh \
+    dhcp-client.sh level1.sh level2.sh level3.sh level4.sh level5.sh \
+    level6.sh level7.sh level8.sh level9.sh level10.sh bin/ip bin/udhcpc \
+    data/alma-hop-hostnames.txt; do
+    cmp -s "$file" "payload/$file" || {
+        echo "runtime payload is stale: $file" >&2
+        exit 1
+    }
+done
+[ ! -e payload/verify.sh ] && [ ! -e payload/test.sh ] &&
+    [ ! -e payload/builder-config ]
 
 printf 'Networking prototype static tests passed.\n'

@@ -58,11 +58,14 @@ setup_basic_level() {
     peer=$(peer_ns "$number")
     gateway="192.0.2.$GATEWAY_OCTET"
 
-    ip netns add "$learner"
     ip netns add "$peer"
-    ip link add "$IFACE" type veth peer name peer0
-    ip link set "$IFACE" netns "$learner"
-    ip link set peer0 netns "$peer"
+    left_temp="plna$number"
+    right_temp="plnb$number"
+    ip link add "$left_temp" type veth peer name "$right_temp"
+    ip link set "$left_temp" netns "$learner"
+    ip link set "$right_temp" netns "$peer"
+    ip -n "$learner" link set "$left_temp" name "$IFACE"
+    ip -n "$peer" link set "$right_temp" name peer0
     ip -n "$learner" link set lo up
     ip -n "$peer" link set lo up
     case "$number" in
@@ -85,6 +88,7 @@ setup_basic_level() {
     case "$number" in
         6)
             set_resolver "$learner" 192.0.2.254
+            chown level6:level6 "/etc/netns/$learner/resolv.conf"
             cat > "$NETLAB_ROOT/dns/level6.conf" <<EOF
 no-resolv
 no-hosts
@@ -144,11 +148,6 @@ story_dns_record() {
     story_hop=$2
     ingress=$((4 * (story_hop - 1) + 2))
     printf 'host-record=%s,198.51.100.%s\n' "$story_name" "$ingress" >> "$story_config"
-    if [ "$story_hop" -lt 9 ]; then
-        outgoing=$((4 * story_hop + 1))
-        printf 'ptr-record=%s.100.51.198.in-addr.arpa,%s\n' \
-            "$outgoing" "$story_name" >> "$story_config"
-    fi
 }
 
 write_story_dns() {
@@ -159,6 +158,7 @@ no-resolv
 no-hosts
 bind-interfaces
 interface=e0b
+local=/alma.lab.test/
 address=/trace.lab.test/198.51.100.34
 pid-file=$NETLAB_ROOT/pids/dns9.pid
 EOF
@@ -178,7 +178,6 @@ EOF
 
 setup_story_level() {
     learner=$(learner_ns 9)
-    ip netns add "$learner"
     for number in 1 2 3 4 5 6 7 8; do ip netns add "$(router_ns "$number")"; done
     ip netns add pln-d9
     for number in 0 1 2 3 4 5 6 7 8; do
@@ -218,10 +217,13 @@ setup_story_level() {
     start_dnsmasq "$(router_ns 1)" "$NETLAB_ROOT/dns/level9.conf"
 }
 
-setup_topology() {
+prepare_topology() {
+    teardown_topology
     mkdir -p "$NETLAB_ROOT/dns" "$NETLAB_ROOT/pids" \
         "$NETLAB_ROOT/logs" "$NETLAB_ROOT/web"
-    teardown_topology
-    for number in 1 2 3 4 5 6 7 8 10; do setup_basic_level "$number"; done
-    setup_story_level
+    for number in 1 2 3 4 5 6 7 8 9 10; do
+        ns=$(learner_ns "$number")
+        ip netns add "$ns"
+        ip -n "$ns" link set lo up
+    done
 }

@@ -1,0 +1,11 @@
+#!/bin/sh
+# Learner-facing ip: read operations use iproute2, changes use a narrow helper.
+set -eu
+if [ "$(id -u)" -eq 0 ]; then
+    exec /usr/local/libexec/polylinux-real-ip "$@"
+fi
+case "${1:-}:${2:-}" in
+    link:set|addr:add|addr:replace|addr:flush|route:add|route:replace|route:del)
+        exec sudo -n /usr/local/sbin/polylinux-network-ip "$@" ;;
+esac
+exec /usr/local/libexec/polylinux-real-ip "$@"

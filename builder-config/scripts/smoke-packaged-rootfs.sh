@@ -18,6 +18,14 @@ cleanup() {
 trap cleanup EXIT HUP INT TERM
 
 gzip -dc "$rootfs" | (cd "$extract_dir" && cpio -id --quiet --no-absolute-filenames)
+[ -f "$extract_dir/root/.profile" ] || {
+    echo 'Packaged rootfs lacks automatic root startup.' >&2
+    exit 1
+}
+[ ! -f "$extract_dir/root/verify.sh" ] || {
+    echo 'Developer solver leaked into the guest.' >&2
+    exit 1
+}
 [ -f "$extract_dir/root/install.sh" ] || {
     echo 'Packaged rootfs lacks the lab installer.' >&2
     exit 1
@@ -28,5 +36,5 @@ chroot "$extract_dir" /bin/busybox --list | grep -qx httpd || {
 }
 env USER_ID=student@example.edu CURRENT_DATE=2026-10-11 \
     NETLAB_ROOT=/tmp/polylinux-networking-prototype \
-    chroot "$extract_dir" /bin/sh /root/install.sh --dry-run
-printf 'Packaged BusyBox httpd and ten-level dry run passed.\n'
+    chroot "$extract_dir" /bin/sh /root/install.sh --dry-run --non-interactive
+printf 'Packaged startup, BusyBox httpd, and ten-level dry run passed.\n'

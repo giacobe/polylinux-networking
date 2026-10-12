@@ -27,6 +27,7 @@ make -s -C "$buildroot_src" O="$output_dir" olddefconfig
 
 for selection in \
     BR2_PACKAGE_BUSYBOX_HTTPD=y \
+    BR2_PACKAGE_SUDO=y \
     BR2_PACKAGE_DNSMASQ=y \
     BR2_PACKAGE_DNSMASQ_DHCP=y \
     BR2_PACKAGE_TRACEROUTE=y \

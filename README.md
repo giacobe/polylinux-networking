@@ -1,63 +1,51 @@
-# PolyLinux Networking prototype
+# PolyLinux Networking
 
-This is a one-VM prototype for ten levels of networking from the command line.
-Levels 1–7 focus on local configuration, Level 8 compares ICMP reachability
-with a local TCP listener, Level 9 traces a named nine-hop route, and Level 10
-resolves and contacts an internal HTTP service.
+Ten account-based Linux networking levels run in one disposable VM. Levels
+1–7 emphasize local configuration, Level 8 inspects a local service, Level 9
+uses nine routed hops with reverse DNS, and Level 10 reaches an internal web
+service. Each `levelN` account has its own network namespace.
 
-The prototype is separate from the recovered eight-level source snapshot in
-`github-sync/polylinux-networking`. It has not been packaged or boot-tested in
-v86. Live installation requires a Linux guest with root access, network
-namespaces, virtual Ethernet, IPv4 forwarding, and the commands in `TOOLSET.md`.
-The current `basic-compression-networking` baseline does not meet that set.
+## Boot and learner flow
 
-## Buildroot builder profile
+The runtime payload includes `/root/.profile`, which runs `/root/install.sh`
+on root login. The installer asks for and confirms the learner's email, records
+an ISO exercise date, creates `level1` through `level10`, prepares a pending
+`README.txt` in every home, and starts ten independent level builders. It
+logs into `level1` when that level is ready. `nextlevel` and `prevlevel`
+switch both the account and its network namespace. Login instructions come
+from `/etc/profile`; the canonical color palette is installed in
+`/etc/profile.d/polylinux-colors.sh`.
 
-The [baseline assessment and build steps](BASELINE.md) identify the missing
-packages and kernel options. The portable config files are in
-[`builder-config/networking-prototype-v1`](builder-config/networking-prototype-v1).
-On the Linux build host, run `sh install-builder-config.sh
-/path/to/buildroot-builder2`, then build with
-`scripts/02-build-baseline.sh --config networking-prototype-v1` using Buildroot
-`2025.02.15`. This creates a candidate baseline; validate the exact image pair
-in v86 before packaging the lab.
-If you previously installed this profile, use `--refresh` and rebuild BusyBox
-as shown in `BASELINE.md`; older images can lack the `httpd` applet.
+Learners can run `ip` and `udhcpc` in their own accounts. Read-only commands
+run directly; the small root-owned helpers permit only the network changes
+used by the relevant level. No answer checker or answer file is installed.
 
-To make a diagnostic lab image from a validated baseline, run
-`sh package-prototype.sh BUILDER_DIR BASELINE_DIR OUTPUT_DIR`. It stages only
-the runtime files, excluding the developer solver, tests, and builder configs.
-Boot-test the resulting pair before using it with learners.
+## Builder2 handoff
 
-## Generate instructions without changing the network
+The complete baseline config set is in
+[builder-config/networking-prototype-v1](builder-config/networking-prototype-v1).
+It extends `basic-compression-networking` with DNS/DHCP, traceroute, curl,
+BusyBox httpd and account applets, `sudo`, network namespaces, and veth.
+Install or refresh it on the Linux build host:
 
-```sh
-NETLAB_ROOT=/tmp/polylinux-networking-prototype \
-USER_ID=student@example.edu CURRENT_DATE=2026-10-11 \
-sh install.sh --dry-run
-```
+`sh install-builder-config.sh --refresh /path/to/buildroot-builder2`
 
-## Run in a disposable Linux guest
+Then the human build operator runs Builder2 script 02 with
+`--config networking-prototype-v1`. The resulting baseline must be checked
+in the guest before publication.
 
-```sh
-USER_ID=student@example.edu CURRENT_DATE=2026-10-11 sh install.sh --live
-sh labctl enter 1
-```
+Builder2 script 03 clones a Git repository and packages every file under
+its selected payload directory. Use `--payload-subdir payload` for this lab.
+The committed `payload/` tree contains only guest runtime files, including
+the hidden `.profile`; it excludes `verify.sh`, `test.sh`, and builder
+material. The source-only [test.sh](test.sh) checks that its copies match the
+top-level runtime scripts. See [BASELINE.md](BASELINE.md) for the human-run
+commands and validation gate.
 
-Use `nextlevel` and `prevlevel` inside the level shell. Run `sh labctl reset`
-from the parent guest shell to remove only this lab's namespaces. Re-running
-`install.sh --live` resets those same namespaces before rebuilding them.
-Developers can run `sh live-test.sh` after installation to exercise and
-compare all ten live paths; keep that test and `verify.sh` outside any VM
-payload.
+## Source checks
 
-Live configuration runs as root inside isolated namespaces because `ip link`,
-`ip addr`, `ip route`, and resolver changes require privilege. This is a
-prototype interface; the standard level-account presentation and external
-grader package still need integration before publication.
-
-The level seed is SHA-256 of the exact UTF-8 concatenation of normalized
-email, ISO date, exercise password, and level password, with no separators or
-trailing newline. Labeled sub-hashes set addresses, names, ports, the
-12-character Level 9 code, and its insertion position. No answer key or local
-correctness checker is installed.
+`sh test.sh` performs nonprivileged deterministic and source checks on a
+Linux development host. `sh live-test.sh` is a developer-only guest check
+after a human build and installation. Neither test nor a Builder2 build has
+been run against the revised image yet; the routed trace, account
+permissions, DHCP, and login handoff still require an exact-image v86 test.

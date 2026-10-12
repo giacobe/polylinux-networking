@@ -76,11 +76,11 @@ learner_ns() { printf 'pln-l%s\n' "$1"; }
 peer_ns() { printf 'pln-p%s\n' "$1"; }
 router_ns() { printf 'pln-r9-%s\n' "$1"; }
 
-level_home() { printf '%s/home/level%s\n' "$NETLAB_ROOT" "$1"; }
+level_home() { printf '%s/level%s\n' "$HOME_ROOT" "$1"; }
 
 write_level_readme() {
     level_values "$1"
-    home=$(level_home "$LEVEL")
+    home=${LEVEL_HOME:-$(level_home "$LEVEL")}
     mkdir -p "$home"
     {
         printf 'Level: level%s\n' "$LEVEL"
@@ -183,11 +183,16 @@ EOF
                 cat <<EOF
 Traceroute and reverse DNS
 
-The local link reaches gateway 198.51.100.2, but this level lacks a route
-to the destination. Add the default route, then compare:
+The local interface e0a has 198.51.100.1/30. The next-hop router is
+198.51.100.2 (not your own .1 address). Add a default route through .2,
+then ping .2 and compare:
 
   traceroute -n trace.lab.test
   traceroute trace.lab.test
+
+The resolver at .2 supplies full names ending in .alma.lab.test. A short
+fragment such as for.the.glory is not a complete DNS name. Use nslookup
+on a hop IP address to inspect its reverse DNS name if needed.
 
 The named hops follow eight lines of Penn State's alma mater. One extra
 PolyLab code line appears between the first and last lyric lines. Submit
@@ -207,4 +212,17 @@ EOF
         esac
         printf '\nSubmit the level answer through the external exercise grading form.\n'
     } > "$home/README.txt"
+}
+
+# Called by each independent level script in a private staging directory.
+generate_level() {
+    number=$1
+    if [ "${INSTALL_MODE:-dry}" = live ]; then
+        . "$INSTALL_ROOT/topology.sh"
+        case "$number" in
+            9) setup_story_level ;;
+            *) setup_basic_level "$number" ;;
+        esac
+    fi
+    write_level_readme "$number"
 }

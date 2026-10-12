@@ -7,6 +7,8 @@ NETLAB_INSTALL_ROOT=$ROOT
 PATH="$ROOT/bin:$PATH"
 export NETLAB_INSTALL_ROOT PATH
 NETLAB_ROOT=${NETLAB_ROOT:-/run/polylinux-networking}
+HOME_ROOT=${HOME_ROOT:-/home}
+export HOME_ROOT
 . "$ROOT/resources.sh"
 
 [ "$(id -u)" -eq 0 ] || die 'live reference solver requires root'
@@ -74,7 +76,7 @@ case "$number" in
         ;;
     7)
         iface=$(interface)
-        ip netns exec "$ns" udhcpc -i "$iface" -n -q >/dev/null
+        ip netns exec "$ns" busybox udhcpc -s "$ROOT/dhcp-client.sh" -i "$iface" -n -q >/dev/null
         address=$(ip -n "$ns" -4 -o addr show dev "$iface" | awk '$3=="inet" {split($4,a,"/"); print a[1]}')
         gateway=$(ip -n "$ns" route show default | awk '{print $3}')
         server=$(awk '$1=="nameserver" {print $2; exit}' "/etc/netns/$ns/resolv.conf")

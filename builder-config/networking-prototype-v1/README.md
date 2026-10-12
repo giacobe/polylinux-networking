@@ -3,10 +3,11 @@
 This profile extends the builder's `basic-compression-networking` configuration
 for the ten-level PolyLinux Networking lab. It targets Buildroot `2025.02.15`
 and the existing qemu x86 kernel `6.12.27` used by that profile. The package
-fragment adds dnsmasq with DHCP, traceroute, the curl command, and
-`BR2_PACKAGE_BUSYBOX_HTTPD=y`. That Buildroot symbol forces BusyBox's `httpd`
+fragment adds dnsmasq with DHCP, traceroute, the curl command,
+`BR2_PACKAGE_SUDO=y`, and `BR2_PACKAGE_BUSYBOX_HTTPD=y`. That Buildroot symbol forces BusyBox's `httpd`
 applet into the compiled binary. The BusyBox fragment also requests the
-applet; the Linux fragment adds network namespaces and veth pairs.
+applet plus `adduser`, `passwd`, and `su` for the ten level accounts. The
+Linux fragment adds network namespaces and veth pairs.
 
 Use `../../install-builder-config.sh /path/to/buildroot-builder2` from this
 repository on the Linux build host. The installer copies this directory into

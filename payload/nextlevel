@@ -1,0 +1,8 @@
+#!/bin/sh
+# Sourced by the login-shell function; status 72 asks the root controller
+# to enter the next account in its own network namespace.
+case "$USER" in
+    level[1-9]) exit 72 ;;
+    level10) echo 'Already at Level 10.' ;;
+    *) echo 'Not in a level account.' >&2; return 1 2>/dev/null || exit 1 ;;
+esac

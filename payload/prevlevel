@@ -1,0 +1,6 @@
+#!/bin/sh
+case "$USER" in
+    level[2-9]|level10) exit 73 ;;
+    level1) echo 'Already at Level 1.' ;;
+    *) echo 'Not in a level account.' >&2; return 1 2>/dev/null || exit 1 ;;
+esac

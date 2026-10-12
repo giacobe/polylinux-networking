@@ -1,5 +1,6 @@
 # Level design
 
+Each level runs under its own `levelN` account and network namespace.
 All generated addresses are confined to the disposable VM. The level seed is
 SHA-256 of exact UTF-8 bytes `email + ISO_date + exercise_password + level_password`.
 Labeled SHA-256 derivations vary interface names, host values, ports, service
@@ -21,11 +22,14 @@ names, codes, and the Level 9 code position. Formats and objectives stay fixed.
 ## Level 9 invariant
 
 The first and last visible story hops are lyric lines. The nine visible lines
-consist of the first eight lines of Penn State's current alma mater and one
+consist of eight lyric lines from Penn State's alma mater and one
 seeded PolyLab code line. The code position changes with the learner and date.
 Router and destination IPs are in `198.51.100.0/24`; each adjacent link uses
-its own /30. The destination is `trace.lab.test`. The first router supplies
-local forward and reverse DNS. No public network or second VM is involved.
+its own /30. The learner interface is `198.51.100.1/30` and the first router
+is `198.51.100.2`. The destination is `trace.lab.test`. The first router
+supplies forward records and PTR names for the nine addresses traceroute
+actually reports: `.2`, `.6`, ... `.34`. Lyric names are full
+`.alma.lab.test` names, not partial phrases. No public network or second VM is involved.
 
 ## Prototype boundaries
 

@@ -1,36 +1,45 @@
 #!/bin/sh
+# Root controller: each login enters that account's own network namespace.
 set -eu
-
-INSTALL_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+cd "$(dirname "$0")"
+INSTALL_ROOT=$(pwd)
 NETLAB_ROOT=${NETLAB_ROOT:-/run/polylinux-networking}
-export INSTALL_ROOT NETLAB_ROOT
+HOME_ROOT=${HOME_ROOT:-/home}
+export INSTALL_ROOT NETLAB_ROOT HOME_ROOT
 . "$INSTALL_ROOT/resources.sh"
 
 usage() {
-    printf 'Usage: labctl enter LEVEL | show LEVEL | reset\n' >&2
+    echo 'Usage: labctl enter LEVEL | show LEVEL | reset' >&2
     exit 2
 }
-
 valid_level() {
     case "$1" in 1|2|3|4|5|6|7|8|9|10) ;; *) usage ;; esac
 }
+[ "$(id -u)" -eq 0 ] || die 'labctl requires root'
 
 case "${1:-}" in
     enter)
         [ "$#" -eq 2 ] || usage
         valid_level "$2"
-        [ "$(id -u)" -eq 0 ] || die 'enter requires root in this prototype'
-        namespace=$(learner_ns "$2")
-        ip netns list | grep -q "^$namespace\([[:space:]]\|$\)" ||
-            die "level $2 has no live namespace; run install.sh --live"
-        ip netns exec "$namespace" env NETLAB_LEVEL="$2" \
-            NETLAB_ROOT="$NETLAB_ROOT" NETLAB_INSTALL_ROOT="$INSTALL_ROOT" \
-            PATH="$INSTALL_ROOT:$INSTALL_ROOT/bin:$PATH" sh -c '
-                cd "$NETLAB_ROOT/home/level$NETLAB_LEVEL"
-                cat README.txt
-                printf "\nType nextlevel or prevlevel to move between levels.\n"
-                exec sh -i
-            '
+        number=$2
+        while :; do
+            ns=$(learner_ns "$number")
+            ip netns list | grep -q "^$ns\\([[:space:]]\\|$\\)" ||
+                die "network for level $number is unavailable"
+            if ip netns exec "$ns" su - "level$number"; then
+                status=0
+            else
+                status=$?
+            fi
+            case "$status" in
+                72)
+                    if [ "$number" -lt 10 ]; then number=$((number + 1)); fi ;;
+                73)
+                    if [ "$number" -gt 1 ]; then number=$((number - 1)); fi ;;
+                0) exit 0 ;;
+                *) die "level $number shell exited with status $status" ;;
+            esac
+        done
         ;;
     show)
         [ "$#" -eq 2 ] || usage
@@ -39,10 +48,9 @@ case "${1:-}" in
         ;;
     reset)
         [ "$#" -eq 1 ] || usage
-        [ "$(id -u)" -eq 0 ] || die 'reset requires root'
         . "$INSTALL_ROOT/topology.sh"
         teardown_topology
-        printf 'Lab-owned network namespaces were removed.\n'
+        echo 'Lab-owned network namespaces were removed.'
         ;;
     *) usage ;;
 esac

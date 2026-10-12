@@ -10,6 +10,7 @@ BR2_PACKAGE_LIBCURL=y
 BR2_PACKAGE_LIBCURL_CURL=y
 BR2_PACKAGE_LIBCURL_TLS_NONE=y
 BR2_PACKAGE_BUSYBOX_HTTPD=y
+BR2_PACKAGE_SUDO=y
 # These relative paths work with the builder's default work/src layout.
 # install-builder-config.sh replaces them with absolute paths for custom layouts.
 BR2_PACKAGE_BUSYBOX_CONFIG_FRAGMENT_FILES="../../../config-sets/networking-prototype-v1/busybox.fragment"

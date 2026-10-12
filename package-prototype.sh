@@ -37,12 +37,14 @@ cleanup() {
 trap cleanup EXIT HUP INT TERM
 
 mkdir -p "$stage_dir/bin" "$stage_dir/data"
-for file in LICENSE install.sh resources.sh topology.sh labctl nextlevel prevlevel \
-    dhcp-client.sh level1.sh level2.sh level3.sh level4.sh level5.sh \
+for file in LICENSE .profile profile polylinux-colors.sh install.sh \
+    resources.sh topology.sh labctl nextlevel prevlevel network-ip.sh \
+    network-udhcpc.sh dhcp-client.sh level1.sh level2.sh level3.sh level4.sh level5.sh \
     level6.sh level7.sh level8.sh level9.sh level10.sh; do
     cp "$source_dir/$file" "$stage_dir/$file"
 done
 cp "$source_dir/bin/udhcpc" "$stage_dir/bin/udhcpc"
+cp "$source_dir/bin/ip" "$stage_dir/bin/ip"
 cp "$source_dir/data/alma-hop-hostnames.txt" "$stage_dir/data/alma-hop-hostnames.txt"
 
 python3 "$builder_dir/scripts/package_rootfs_payload.py" \

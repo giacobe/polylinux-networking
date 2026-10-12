@@ -47,9 +47,10 @@ substitute the builder's newer default Buildroot release without first
 revalidating the symbols and fragment behavior.
 
 The profile requests `iproute2` (`ip`, `ss`), `iputils` (`ping`), traceroute,
-dnsmasq with DHCP, and curl without a TLS backend because lab traffic stays
-inside the VM over HTTP. `BR2_PACKAGE_BUSYBOX_HTTPD=y` forces the BusyBox
-`httpd` applet into the binary; BusyBox also supplies `nslookup` and `udhcpc`.
+dnsmasq with DHCP, curl without a TLS backend, and `sudo` for limited
+network changes from level accounts. `BR2_PACKAGE_BUSYBOX_HTTPD=y` forces
+the BusyBox `httpd` applet into the binary; the BusyBox fragment also pins
+`adduser`, `passwd`, `su`, `nslookup`, and `udhcpc`.
 The kernel fragment requests `CONFIG_NAMESPACES`, `CONFIG_NET_NS`, and
 `CONFIG_VETH` plus their networking, proc, and sysctl prerequisites.
 
@@ -100,10 +101,24 @@ python3 ../polylinux-networking/builder-config/scripts/check-rootfs-commands.py 
 ```
 
 This checks names only. Boot the **exact** `bzImage` and `rootfs.cpio.gz` pair
-in v86 and exercise namespace/veth creation, interface and route changes,
-the DHCP lease, A and PTR lookups, all nine named traceroute hops, the local
-listener in `ss`, and HTTP fetches. Run all ten `live-test.sh` paths in a
+in v86 and exercise automatic root-login installation, email confirmation,
+account switching, namespace/veth creation, permitted interface and route
+changes, the DHCP lease, A and PTR lookups, all nine named traceroute hops,
+the local listener in `ss`, and HTTP fetches. Run all ten `live-test.sh` paths in a
 compatible guest. Record results in `manifest/validation-notes.md`. Keep the
-baseline image free of lab payload files. Use `package-prototype.sh` to make a
-diagnostic lab image with only runtime files, then boot-test that packaged pair
-in v86. Browser publication requires the complete packaged-image check.
+baseline image free of lab payload files. After the validated baseline is
+available, the human operator can use Builder2 script 03 with the runtime-only
+`payload/` subdirectory from a committed lab revision:
+
+```sh
+scripts/03-package-payload.sh \
+  --repo https://github.com/giacobe/polylinux-networking.git \
+  --ref <tested-commit> --payload-subdir payload \
+  --baseline artifacts/networking-prototype-v1-<timestamp> \
+  --output artifacts/polylinux-networking-<timestamp> \
+  --output-prefix polylinux-networking
+```
+
+The `payload/` tree includes `/root/.profile` for automatic installation and
+excludes developer solvers and tests. Boot-test that exact packaged pair in v86.
+Browser publication requires the complete packaged-image check.

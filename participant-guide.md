@@ -8,14 +8,16 @@ form_url: ""
 
 # Networking from the Command Line
 
-This prototype runs in one disposable Linux virtual machine. Each level has
-an isolated network so changes to an address, route, or resolver in one level
-do not disturb the others. An internal router, DNS/DHCP service, and web
-service support the later exercises. No public internet access is required.
+This lab runs in one disposable Linux virtual machine. Each level account
+has its own isolated network, so changes to an address, route, or resolver in
+one level do not disturb the others. Internal DNS, DHCP, and web services
+support later exercises. No public internet access is required.
 
-The prototype is entered from the root shell with `sh labctl enter 1` after
-installation. Read the level's `README.txt`. Use `nextlevel` and `prevlevel`
-to move freely; completing one level is not required to enter another.
+At boot, the root login runs the installer automatically. Enter your email
+address and confirm it; the lab uses that address and the exercise date to
+generate your scenario. The installer signs you into `level1`. Read
+`README.txt`, then use `nextlevel` and `prevlevel` to move freely among the
+ten level accounts. Completing a level is not required to enter another.
 
 Submit the requested value to the external exercise grading form when a form
 is published. The VM does not tell you whether an answer is correct. Preserve
@@ -51,14 +53,17 @@ each level's README.
    shell. Test the configured server with `nslookup`.
 7. Inspect the DHCP result in the address, route, and resolver views.
 8. A successful ping does not tell you which TCP port a service listens on.
-9. Compare numeric and named traces. The extra line contains the PolyLab
-   code; it is not a lyric line.
+9. The first router is the address next to your own on the /30 link. Ping
+   that router, then compare numeric and named traces. Reverse DNS maps hop
+   IPs to full names ending in `.alma.lab.test`; partial lyric fragments are
+   not complete DNS names. The extra line contains the PolyLab code.
 10. Resolve the service name before requesting its HTTP path.
 
 ## Troubleshooting
 
-If a level shell is closed, re-enter it with `sh labctl enter N` from the
-guest root shell. The VM is disposable: restarting it recreates the seeded
-scenario for the same email and date. An incomplete or missing named trace
-should be reported with the level number and output; route and DNS behavior
-must be validated in the packaged guest.
+If you leave the level shell, log in as root again; root login restarts the
+exercise. Restarting the disposable VM recreates the scenario for the same
+email and date. On Level 9, `tracert` is a Windows command; use Linux
+`traceroute`. The correct next hop is `198.51.100.2`, while `.1` is your own
+interface. Use `nslookup` on a hop IP or a complete `.alma.lab.test` name.
+Report an incomplete trace with the level number and command output.

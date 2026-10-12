@@ -4,6 +4,8 @@ set -eu
 cd "$(dirname "$0")"
 INSTALL_ROOT=$(pwd)
 NETLAB_ROOT=${NETLAB_ROOT:-/run/polylinux-networking}
+HOME_ROOT=${HOME_ROOT:-/home}
+export HOME_ROOT
 USER_ID=${USER_ID:-student@example.edu}
 CURRENT_DATE=${CURRENT_DATE:-$(date +%Y-%m-%d)}
 SYSTEM_PASSWORD=${SYSTEM_PASSWORD:-systemPassword}
@@ -12,6 +14,11 @@ export INSTALL_ROOT NETLAB_ROOT USER_ID CURRENT_DATE SYSTEM_PASSWORD LEVEL_PASSW
 . ./resources.sh
 
 [ "$(id -u)" -eq 0 ] || die 'live-test.sh requires root'
+for number in 1 2 3 4 5 6 7 8 9 10; do
+    id "level$number" >/dev/null 2>&1 || die "missing level$number account"
+done
+ip netns exec pln-l9 su -c 'PATH=/usr/local/bin:$PATH ip route replace default via 198.51.100.2 dev e0a' level9 >/dev/null ||
+    die 'Level 9 account cannot configure its route through the network helper'
 for number in 1 2 3 4 5 6 7 8 9 10; do
     level_values "$number"
     case "$number" in
@@ -43,4 +50,7 @@ numeric=$(ip netns exec pln-l9 traceroute -n -m 12 -q 1 trace.lab.test)
 if printf '%s\n' "$named" | grep -qi 'bad[.]horse'; then
     die 'unrelated traceroute wording leaked into Level 9'
 fi
+ip netns exec pln-l9 nslookup 198.51.100.2 |
+    grep -q 'for.the.glory.of.old.state.alma.lab.test' ||
+    die 'Level 9 first-hop reverse DNS is missing'
 printf 'Nine-hop named and numeric traces passed.\n'
