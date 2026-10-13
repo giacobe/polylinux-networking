@@ -55,10 +55,10 @@ each level's README.
    shell. Test the configured server with `nslookup`.
 7. Inspect the DHCP result in the address, route, and resolver views.
 8. A successful ping does not tell you which TCP port a service listens on.
-9. The first router is the address next to your own on the /30 link. Ping
-   that router, then compare numeric and named traces. Reverse DNS maps hop
-   IPs to full names ending in `.alma.lab.test`; partial lyric fragments are
-   not complete DNS names. The extra line contains the PolyLab code.
+9. Your `.2` address and the `.1` router share a /30 link. Ping that router,
+   then compare numeric and named traces. Reverse DNS maps hop IPs to full
+   lyric names; partial fragments are not complete DNS names. Link delays
+   accumulate in traceroute RTTs. The extra line contains the PolyLab code.
 10. Resolve the service name before requesting its HTTP path.
 
 ## Troubleshooting
@@ -66,6 +66,6 @@ each level's README.
 If you leave the level shell, log in as root again; root login restarts the
 exercise. Restarting the disposable VM recreates the scenario for the same
 email and date. On Level 9, `tracert` is a Windows command; use Linux
-`traceroute`. The correct next hop is `198.51.100.2`, while `.1` is your own
-interface. Use `nslookup` on a hop IP or a complete `.alma.lab.test` name.
+`traceroute`. The correct next hop is `198.51.100.1`, while `.2` is your own
+interface. Use `nslookup` on a hop IP or a complete lyric name.
 Report an incomplete trace with the level number and command output.

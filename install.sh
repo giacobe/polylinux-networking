@@ -61,9 +61,10 @@ if [ "$INSTALL_MODE" = live ]; then
         /run/polylinux-networking|/tmp/polylinux-networking-prototype) ;;
         *) die 'live NETLAB_ROOT must be a recognized disposable path' ;;
     esac
-    for command in adduser busybox curl dnsmasq ip nslookup passwd ping \
-        ss su sudo traceroute udhcpc; do need "$command"; done
+    for command in adduser busybox clear curl dnsmasq ip nslookup passwd ping \
+        ss su sudo tc traceroute udhcpc; do need "$command"; done
     busybox --list | grep -qx httpd || die 'BusyBox httpd applet is required'
+    busybox --list | grep -qx clear || die 'BusyBox clear applet is required'
     [ -d /proc/sys/net/ipv4 ] || die 'IPv4 kernel support is required'
 fi
 

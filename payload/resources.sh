@@ -254,16 +254,17 @@ EOF
                 cat <<EOF
 Traceroute and reverse DNS
 
-On e0a, your address is 198.51.100.1/30.
+On e0a, your address is 198.51.100.2/30.
 
-Use 198.51.100.2 as the next-hop router. The .1 address is your own.
+Use 198.51.100.1 as the next-hop router. The .2 address is your own.
 
-Add a default route through .2, ping .2, and compare:
+Add a default route through .1, ping .1, and compare:
 
   traceroute -n trace.lab.test
   traceroute trace.lab.test
 
-The resolver at .2 supplies full names ending in .alma.lab.test.
+The resolver at .1 supplies each hop's full name. Link delays accumulate
+in the traceroute times.
 
 A fragment such as for.the.glory is not a complete DNS name. Use nslookup
 on a hop IP address to inspect its reverse DNS name if needed.

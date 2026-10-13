@@ -115,9 +115,9 @@ case "$number" in
         printf '%s\n' "$port"
         ;;
     9)
-        ip -n "$ns" route replace default via 198.51.100.2 dev e0a
+        ip -n "$ns" route replace default via 198.51.100.1 dev e0a
         ip netns exec "$ns" traceroute -m 12 -q 1 trace.lab.test |
-            sed -n 's/.*polylab[.]code[.]\([0-9a-f]\{12\}\)[.]alma[.]lab[.]test.*/\1/p'
+            sed -n 's/.*polylab[.]code[.]\([0-9a-f]\{12\}\).*/\1/p'
         ;;
     10)
         name=$(printf '%s\n' "$instructions" |

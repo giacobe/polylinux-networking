@@ -26,6 +26,7 @@ printf 'BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="%s/linux.fragment"\n' "$profile_
 make -s -C "$buildroot_src" O="$output_dir" olddefconfig
 
 for selection in \
+    BR2_PACKAGE_IPROUTE2=y \
     BR2_PACKAGE_BUSYBOX_HTTPD=y \
     BR2_PACKAGE_SUDO=y \
     BR2_PACKAGE_DNSMASQ=y \

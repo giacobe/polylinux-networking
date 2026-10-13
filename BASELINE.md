@@ -46,13 +46,15 @@ If dependencies are already installed, `scripts/01-setup-buildroot.sh
 substitute the builder's newer default Buildroot release without first
 revalidating the symbols and fragment behavior.
 
-The profile requests `iproute2` (`ip`, `ss`), `iputils` (`ping`), traceroute,
+The profile requests `iproute2` (`ip`, `ss`, `tc`), `iputils` (`ping`), traceroute,
 dnsmasq with DHCP, curl without a TLS backend, and `sudo` for limited
 network changes from level accounts. `BR2_PACKAGE_BUSYBOX_HTTPD=y` forces
 the BusyBox `httpd` applet into the binary; the BusyBox fragment also pins
-`adduser`, `passwd`, `su`, `nslookup`, and `udhcpc`.
+`adduser`, `passwd`, `su`, `clear`, `nslookup`, and `udhcpc`.
 The kernel fragment requests `CONFIG_NAMESPACES`, `CONFIG_NET_NS`, and
-`CONFIG_VETH` plus their networking, proc, and sysctl prerequisites.
+`CONFIG_VETH` plus their networking, proc, and sysctl prerequisites. It also
+requests `CONFIG_NET_SCHED=y` and `CONFIG_NET_SCH_NETEM=y` for the real
+10–200 ms delays on Level 9's virtual links.
 
 ## Inspect and preserve the result
 
@@ -122,6 +124,30 @@ python3 ../polylinux-networking/builder-config/scripts/check-rootfs-commands.py 
 After packaging, `builder-config/scripts/smoke-packaged-rootfs.sh` also checks
 that `sudo` exists and starts in the packaged rootfs.
 
+### Refresh for Level 9 delays and the clear command
+
+The new Level 9 topology needs `tc` and kernel netem; the learner profile needs
+BusyBox `clear`. Refresh the config set, then let Builder2 script 02 rebuild
+BusyBox and Linux from clean package directories before script 03 packages the
+lab. On the Linux build host, with sibling checkouts:
+
+```sh
+git -C "$HOME/polylinux-networking" pull --ff-only
+sh "$HOME/polylinux-networking/install-builder-config.sh" \
+  --refresh "$HOME/buildroot-builder2"
+cd "$HOME/buildroot-builder2"
+. ./.polylinux-builder.env
+make -C "$BUILDROOT_SRC" O="$BUILD_DIR/networking-prototype-v1" busybox-dirclean
+make -C "$BUILDROOT_SRC" O="$BUILD_DIR/networking-prototype-v1" linux-dirclean
+scripts/02-build-baseline.sh --config networking-prototype-v1
+```
+
+Confirm `CONFIG_CLEAR=y` in the generated BusyBox config,
+`CONFIG_NET_SCHED=y` and `CONFIG_NET_SCH_NETEM=y` in the generated Linux
+config, and `clear` plus `tc` in the new baseline rootfs. Command presence
+does not prove that netem works: the packaged guest must show all nine hop
+names and `netem` qdiscs on both sides of each virtual link.
+
 Run a command-presence check against the built archive (from the sibling
 `polylinux-networking` checkout):
 
@@ -135,6 +161,7 @@ This checks names only. Boot the **exact** `bzImage` and `rootfs.cpio.gz` pair
 in v86 and exercise automatic root-login installation, email confirmation,
 account switching, namespace/veth creation, permitted interface and route
 changes, the DHCP lease, A and PTR lookups, all nine named traceroute hops,
+the Level 9 `.1` gateway and netem delays, clean account screen transitions,
 the local listener in `ss`, and HTTP fetches. Run all ten `live-test.sh` paths in a
 compatible guest. Record results in `manifest/validation-notes.md`. Keep the
 baseline image free of lab payload files. After the validated baseline is

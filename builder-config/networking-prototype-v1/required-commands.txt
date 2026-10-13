@@ -2,6 +2,7 @@ adduser
 awk
 busybox
 cat
+clear
 chmod
 chown
 cp
@@ -29,6 +30,7 @@ sleep
 ss
 su
 sudo
+tc
 tr
 traceroute
 udhcpc

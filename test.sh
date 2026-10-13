@@ -51,6 +51,11 @@ sh install-builder-config.sh "$case_root/builder" >/dev/null
 sh install-builder-config.sh --refresh "$case_root/builder" >/dev/null
 profile_dir="$case_root/builder/config-sets/networking-prototype-v1"
 grep -Fqx 'BR2_PACKAGE_BUSYBOX_HTTPD=y' "$profile_dir/features.fragment"
+grep -Fqx 'CONFIG_CLEAR=y' "$profile_dir/busybox.fragment"
+grep -Fqx 'CONFIG_NET_SCHED=y' "$profile_dir/linux.fragment"
+grep -Fqx 'CONFIG_NET_SCH_NETEM=y' "$profile_dir/linux.fragment"
+grep -Fqx 'clear' "$profile_dir/required-commands.txt"
+grep -Fqx 'tc' "$profile_dir/required-commands.txt"
 [ "$(grep -Fc 'BR2_PACKAGE_BUSYBOX_CONFIG_FRAGMENT_FILES=' "$profile_dir/features.fragment")" -eq 1 ]
 grep -Fqx 'BR2_PACKAGE_BUSYBOX_CONFIG_FRAGMENT_FILES="../../../config-sets/networking-prototype-v1/busybox.fragment"' \
     builder-config/networking-prototype-v1/features.fragment
@@ -91,6 +96,7 @@ fi
 
 [ "$(wc -l < data/alma-hop-hostnames.txt)" -eq 8 ]
 ! grep -i 'bad[.]horse' data/alma-hop-hostnames.txt
+! grep -Fq 'alma.lab.test' data/alma-hop-hostnames.txt
 for number in 1 2 3 4 5 6 7 8 9 10; do
     readme="$case_root/first/home/level$number/README.txt"
     [ -s "$readme" ]
@@ -101,7 +107,7 @@ for number in 1 2 3 4 5 6 7 8 9 10; do
     awk '/Answer format:/ && $0 !~ /^\* Answer format:/ { exit 1 }' "$readme"
 done
 grep -Fq '* Exercise code: 1352894' "$case_root/later/home/level1/README.txt"
-grep -Fq '* The resolver at .2 supplies full names ending in .alma.lab.test.' \
+grep -Fq "* The resolver at .1 supplies each hop's full name." \
     "$case_root/first/home/level9/README.txt"
 grep -Fq '* One PolyLab code line appears between the first and last lyric lines.' \
     "$case_root/first/home/level9/README.txt"
@@ -112,6 +118,7 @@ SYSTEM_PASSWORD=systemPassword
 LEVEL_PASSWORD_ROOT=levelPassword
 export USER_ID CURRENT_DATE SYSTEM_PASSWORD LEVEL_PASSWORD_ROOT
 . ./resources.sh
+. ./topology.sh
 level_values 9
 [ "$LEVEL_SEED" = 'e6c52cf528b46da253df5a3d0140e77f37962f4f544201fa9254b549de83d9d3' ]
 case "$CODE" in
@@ -119,6 +126,16 @@ case "$CODE" in
 esac
 printf '%s' "$CODE" | grep -Eq '^[0-9a-f]{12}$'
 [ "$INSERT_AFTER" -ge 2 ] && [ "$INSERT_AFTER" -le 6 ]
+first_delay=
+varied=0
+for link in 0 1 2 3 4 5 6 7 8; do
+    delay=$(story_link_delay_ms "$link")
+    [ "$delay" -ge 10 ] && [ "$delay" -le 200 ]
+    [ "$(story_link_delay_ms "$link")" -eq "$delay" ]
+    if [ -z "$first_delay" ]; then first_delay=$delay
+    elif [ "$delay" -ne "$first_delay" ]; then varied=1; fi
+done
+[ "$varied" -eq 1 ]
 
 # The live topology uses `number` while creating routers. It must not change
 # which level's README is generated after topology setup returns.
@@ -138,18 +155,43 @@ INSTALL_ROOT=$(pwd)
 NETLAB_ROOT="$case_root/story"
 export INSTALL_ROOT NETLAB_ROOT
 mkdir -p "$NETLAB_ROOT/dns"
-. ./topology.sh
 write_story_dns
 [ "$(grep -c '^host-record=' "$NETLAB_ROOT/dns/level9.conf")" -eq 9 ]
 [ "$(grep -c '^host-record=polylab[.]code[.]' "$NETLAB_ROOT/dns/level9.conf")" -eq 1 ]
-line=$(grep -n '^host-record=polylab[.]code[.]' "$NETLAB_ROOT/dns/level9.conf" | cut -d : -f 1)
-[ "$line" -eq $((INSERT_AFTER + 8)) ]
+position=$(awk '/^host-record=/ { count++; if ($0 ~ /^host-record=polylab[.]code[.]/) print count }' \
+    "$NETLAB_ROOT/dns/level9.conf")
+[ "$position" -eq $((INSERT_AFTER + 1)) ]
 grep -q '^address=/trace[.]lab[.]test/198[.]51[.]100[.]34$' \
     "$NETLAB_ROOT/dns/level9.conf"
 ! grep -q '^ptr-record=' "$NETLAB_ROOT/dns/level9.conf"
-awk -F, '/^host-record=/ { expected = 4 * count + 2; if ($2 != "198.51.100." expected) exit 1; count++ } END { if (count != 9) exit 1 }' \
+awk -F, '/^host-record=/ { expected = count == 0 ? 1 : 4 * count + 2; if ($2 != "198.51.100." expected) exit 1; count++ } END { if (count != 9) exit 1 }' \
     "$NETLAB_ROOT/dns/level9.conf"
-grep -Fq '198.51.100.2' "$case_root/first/home/level9/README.txt"
+grep -Fq 'host-record=for.the.glory.of.old.state,198.51.100.1' \
+    "$NETLAB_ROOT/dns/level9.conf"
+! grep -Fq 'alma.lab.test' "$NETLAB_ROOT/dns/level9.conf"
+grep -Fq '198.51.100.1' "$case_root/first/home/level9/README.txt"
+awk '/^clear$/ { cleared=1 } /^cat README[.]txt$/ { if (!cleared) exit 1; found=1 } END { if (!found) exit 1 }' profile
+
+# Exercise the topology builder with a logging ip stub so the first-link
+# address swap and all 18 netem directions are checked without root access.
+(
+    ip() { printf '%s\n' "$*" >> "$case_root/story-ip.log"; }
+    set_resolver() { printf '%s %s\n' "$1" "$2" >> "$case_root/story-resolver.log"; }
+    start_dnsmasq() { :; }
+    setup_story_level
+)
+grep -Fqx -- '-n pln-l9 addr add 198.51.100.2/30 dev e0a' "$case_root/story-ip.log"
+grep -Fqx -- '-n pln-r9-1 addr add 198.51.100.1/30 dev e0b' "$case_root/story-ip.log"
+grep -Fqx 'pln-l9 198.51.100.1' "$case_root/story-resolver.log"
+[ "$(grep -Ec '^netns exec pln-.* tc qdisc add dev e[0-8][ab] root netem delay [0-9]+ms$' \
+    "$case_root/story-ip.log")" -eq 18 ]
+delay=$(story_link_delay_ms 0)
+forward=$((delay / 2))
+backward=$((delay - forward))
+grep -Fqx "netns exec pln-l9 tc qdisc add dev e0a root netem delay ${forward}ms" \
+    "$case_root/story-ip.log"
+grep -Fqx "netns exec pln-r9-1 tc qdisc add dev e0b root netem delay ${backward}ms" \
+    "$case_root/story-ip.log"
 [ -f .profile ] && [ -f profile ] && [ -f polylinux-colors.sh ]
 grep -q 'exec sh /root/install.sh' .profile
 grep -q 'su - "level$number"' labctl

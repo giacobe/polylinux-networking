@@ -21,6 +21,7 @@ export PS1
 nextlevel() { . /usr/bin/nextlevel; }
 prevlevel() { . /usr/bin/prevlevel; }
 cd "$HOME" || exit 1
+clear
 box_line() { printf '* %-76.76s *\n' "$1"; }
 border=$(printf '%80s' '' | tr ' ' '*')
 printf '%s\n' "$border"

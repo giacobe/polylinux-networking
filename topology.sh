@@ -146,8 +146,18 @@ EOF
 story_dns_record() {
     story_name=$1
     story_hop=$2
-    ingress=$((4 * (story_hop - 1) + 2))
+    if [ "$story_hop" -eq 1 ]; then
+        ingress=1
+    else
+        ingress=$((4 * (story_hop - 1) + 2))
+    fi
     printf 'host-record=%s,198.51.100.%s\n' "$story_name" "$ingress" >> "$story_config"
+}
+
+story_link_delay_ms() {
+    link=$1
+    value=$(derive_byte "story-link-delay-$link")
+    printf '%s\n' "$((10 + value % 191))"
 }
 
 write_story_dns() {
@@ -158,7 +168,6 @@ no-resolv
 no-hosts
 bind-interfaces
 interface=e0b
-local=/alma.lab.test/
 address=/trace.lab.test/198.51.100.34
 pid-file=$NETLAB_ROOT/pids/dns9.pid
 EOF
@@ -170,13 +179,14 @@ EOF
         story_dns_record "$lyric_name" "$hop"
         if [ "$lyric_number" -eq "$INSERT_AFTER" ]; then
             hop=$((hop + 1))
-            story_dns_record "polylab.code.$CODE.alma.lab.test" "$hop"
+            story_dns_record "polylab.code.$CODE" "$hop"
         fi
     done < "$INSTALL_ROOT/data/alma-hop-hostnames.txt"
     [ "$lyric_number" -eq 8 ] && [ "$hop" -eq 9 ] || die 'story requires eight lyric hops and one code hop'
 }
 
 setup_story_level() {
+    level_values 9
     learner=$(learner_ns 9)
     for number in 1 2 3 4 5 6 7 8; do ip netns add "$(router_ns "$number")"; done
     ip netns add pln-d9
@@ -189,13 +199,25 @@ setup_story_level() {
         right_if="e${number}b"
         first=$((4 * number + 1))
         second=$((first + 1))
+        if [ "$number" -eq 0 ]; then
+            left_address=$second
+            right_address=$first
+        else
+            left_address=$first
+            right_address=$second
+        fi
         ip link add "$left_if" type veth peer name "$right_if"
         ip link set "$left_if" netns "$left_ns"
         ip link set "$right_if" netns "$right_ns"
-        ip -n "$left_ns" addr add "198.51.100.$first/30" dev "$left_if"
-        ip -n "$right_ns" addr add "198.51.100.$second/30" dev "$right_if"
+        ip -n "$left_ns" addr add "198.51.100.$left_address/30" dev "$left_if"
+        ip -n "$right_ns" addr add "198.51.100.$right_address/30" dev "$right_if"
         ip -n "$left_ns" link set "$left_if" up
         ip -n "$right_ns" link set "$right_if" up
+        delay=$(story_link_delay_ms "$number")
+        forward_delay=$((delay / 2))
+        return_delay=$((delay - forward_delay))
+        ip netns exec "$left_ns" tc qdisc add dev "$left_if" root netem delay "${forward_delay}ms"
+        ip netns exec "$right_ns" tc qdisc add dev "$right_if" root netem delay "${return_delay}ms"
     done
     for ns in $(all_namespace_names); do
         case "$ns" in pln-l9|pln-r9-*|pln-d9) ip -n "$ns" link set lo up ;; esac
@@ -212,7 +234,7 @@ setup_story_level() {
         ip netns exec "$ns" sh -c 'printf 1 > /proc/sys/net/ipv4/ip_forward'
     done
     ip -n pln-d9 route add default via 198.51.100.33 dev e8b
-    set_resolver "$learner" 198.51.100.2
+    set_resolver "$learner" 198.51.100.1
     write_story_dns
     start_dnsmasq "$(router_ns 1)" "$NETLAB_ROOT/dns/level9.conf"
 }

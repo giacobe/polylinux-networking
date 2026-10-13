@@ -44,7 +44,7 @@ ip netns exec pln-l5 su -c "PATH=/usr/local/bin:\$PATH ip route add default via 
 level_values 7
 ip netns exec pln-l7 su -c "PATH=/usr/local/bin:\$PATH udhcpc -i $IFACE -n -q" level7 >/dev/null ||
     die 'Level 7 account cannot request a DHCP lease'
-ip netns exec pln-l9 su -c 'PATH=/usr/local/bin:$PATH ip route replace default via 198.51.100.2 dev e0a' level9 >/dev/null ||
+ip netns exec pln-l9 su -c 'PATH=/usr/local/bin:$PATH ip route replace default via 198.51.100.1 dev e0a' level9 >/dev/null ||
     die 'Level 9 account cannot configure its route through the network helper'
 printf 'Learner account network-change commands passed.\n'
 for number in 1 2 3 4 5 6 7 8 9 10; do
@@ -78,7 +78,17 @@ numeric=$(ip netns exec pln-l9 traceroute -n -m 12 -q 1 trace.lab.test)
 if printf '%s\n' "$named" | grep -qi 'bad[.]horse'; then
     die 'unrelated traceroute wording leaked into Level 9'
 fi
-ip netns exec pln-l9 nslookup 198.51.100.2 |
-    grep -q 'for.the.glory.of.old.state.alma.lab.test' ||
+ip netns exec pln-l9 nslookup 198.51.100.1 |
+    grep -q 'for.the.glory.of.old.state' ||
     die 'Level 9 first-hop reverse DNS is missing'
+for link in 0 1 2 3 4 5 6 7 8; do
+    if [ "$link" -eq 0 ]; then left_ns=pln-l9
+    else left_ns=$(router_ns "$link"); fi
+    if [ "$link" -eq 8 ]; then right_ns=pln-d9
+    else right_ns=$(router_ns "$((link + 1))"); fi
+    ip netns exec "$left_ns" tc qdisc show dev "e${link}a" | grep -q netem ||
+        die "Level 9 link $link is missing its forward delay"
+    ip netns exec "$right_ns" tc qdisc show dev "e${link}b" | grep -q netem ||
+        die "Level 9 link $link is missing its return delay"
+done
 printf 'Nine-hop named and numeric traces passed.\n'

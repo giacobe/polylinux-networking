@@ -14,7 +14,8 @@ an ISO exercise date, and displays its uppercase hexadecimal exercise code
 the seed input. The installer creates `level1` through `level10`, prepares a pending
 `README.txt` in every home, and starts ten independent level builders. It
 logs into `level1` when that level is ready. `nextlevel` and `prevlevel`
-switch both the account and its network namespace. Login instructions come
+switch both the account and its network namespace. Each level login clears the
+terminal before displaying the new banner and README. Login instructions come
 from `/etc/profile`; the canonical color palette is installed in
 `/etc/profile.d/polylinux-colors.sh`.
 The account banner and each level's instructions use 80-character star boxes.
@@ -30,7 +31,8 @@ used by the relevant level. No answer checker or answer file is installed.
 The complete baseline config set is in
 [builder-config/networking-prototype-v1](builder-config/networking-prototype-v1).
 It extends `basic-compression-networking` with DNS/DHCP, traceroute, curl,
-BusyBox httpd and account applets, `sudo`, network namespaces, and veth.
+iproute2 `tc`, BusyBox `httpd` and `clear`, `sudo`, network namespaces, veth,
+and kernel netem delay support.
 Install or refresh it on the Linux build host:
 
 `sh install-builder-config.sh --refresh /path/to/buildroot-builder2`
@@ -51,6 +53,5 @@ commands and validation gate.
 
 `sh test.sh` performs nonprivileged deterministic and source checks on a
 Linux development host. `sh live-test.sh` is a developer-only guest check
-after a human build and installation. Neither test nor a Builder2 build has
-been run against the revised image yet; the routed trace, account
+after a human build and installation. The routed trace, netem delays, account
 permissions, DHCP, and login handoff still require an exact-image v86 test.

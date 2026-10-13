@@ -11,13 +11,16 @@ assigned changes in their own namespaces through root-owned `sudo` helpers.
 ## Installer and service dependencies
 
 `ip` must support `netns`, `link`, `addr`, `route`, and `-n`. The guest also
-needs `dnsmasq` for isolated DHCP/DNS fixtures and BusyBox `httpd` for local
-HTTP fixtures. Account setup requires BusyBox `adduser`, `passwd`, `su`, and
-Buildroot `sudo`. The installer also requires `sha256sum`, `cut`, `tr`, `awk`,
+needs `dnsmasq` for isolated DHCP/DNS fixtures, BusyBox `httpd` for local
+HTTP fixtures, and `tc` from iproute2 for Level 9 link delays. Account setup
+requires BusyBox `adduser`, `passwd`, `su`, and Buildroot `sudo`. The account
+profile uses BusyBox `clear` before each level display. The installer also
+requires `sha256sum`, `cut`, `tr`, `awk`,
 `sed`, `grep`, `sleep`, `id`, and standard POSIX shell utilities.
 
-The kernel must support `CONFIG_NET_NS`, `CONFIG_VETH`, IPv4 forwarding,
-ICMP Time Exceeded replies, and the namespace-specific resolver bind mounts
+The kernel must support `CONFIG_NET_NS`, `CONFIG_VETH`, `CONFIG_NET_SCHED`,
+`CONFIG_NET_SCH_NETEM`, IPv4 forwarding, ICMP Time Exceeded replies, and the
+namespace-specific resolver bind mounts
 used by `ip netns exec`. Confirm these in the exact v86 image.
 
 The preserved `basic-compression-networking` baseline has `ip` and `ping` in
@@ -25,8 +28,9 @@ its required-command manifest. Its saved Buildroot configuration disables
 `curl` and `dnsmasq`; BusyBox `httpd` and `udhcpd` are disabled in its saved
 BusyBox configuration. `ss`, `traceroute`, `nslookup`, and `udhcpc` must be
 checked in the actual guest even where a package or applet configuration
-suggests they are present. The revised account flow adds `BR2_PACKAGE_SUDO=y` and pins the BusyBox
-account applets. Rebuild the revised config set before packaging this lab.
+suggests they are present. The revised account flow adds `BR2_PACKAGE_SUDO=y`
+and pins BusyBox account and `clear` applets. Rebuild the revised config set
+before packaging this lab so the kernel has netem and the target has `tc`.
 
 ## v86 validation gate
 

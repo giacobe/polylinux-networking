@@ -34,6 +34,10 @@ chroot "$extract_dir" /bin/busybox --list | grep -qx httpd || {
     echo 'Packaged BusyBox lacks httpd.' >&2
     exit 1
 }
+chroot "$extract_dir" /bin/busybox --list | grep -qx clear || {
+    echo 'Packaged BusyBox lacks clear.' >&2
+    exit 1
+}
 chroot "$extract_dir" /bin/sh -c 'command -v sudo >/dev/null 2>&1' || {
     echo 'Packaged rootfs lacks sudo; level accounts cannot change network state.' >&2
     exit 1
@@ -42,7 +46,11 @@ chroot "$extract_dir" /bin/sh -c 'sudo -V >/dev/null 2>&1' || {
     echo 'Packaged sudo cannot start in the target rootfs.' >&2
     exit 1
 }
+chroot "$extract_dir" /bin/sh -c 'command -v clear >/dev/null 2>&1 && command -v tc >/dev/null 2>&1 && tc -V >/dev/null 2>&1' || {
+    echo 'Packaged rootfs lacks working clear or tc support.' >&2
+    exit 1
+}
 env USER_ID=student@example.edu CURRENT_DATE=2026-10-11 \
     NETLAB_ROOT=/tmp/polylinux-networking-prototype \
     chroot "$extract_dir" /bin/sh /root/install.sh --dry-run --non-interactive
-printf 'Packaged startup, BusyBox httpd, sudo, and ten-level dry run passed.\n'
+printf 'Packaged startup, BusyBox httpd, sudo, clear, tc, and ten-level dry run passed.\n'
