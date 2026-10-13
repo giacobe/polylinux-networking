@@ -51,6 +51,9 @@ dnsmasq with DHCP, curl without a TLS backend, and `sudo` for limited
 network changes from level accounts. `BR2_PACKAGE_BUSYBOX_HTTPD=y` forces
 the BusyBox `httpd` applet into the binary; the BusyBox fragment also pins
 `adduser`, `passwd`, `su`, `clear`, `nslookup`, and `udhcpc`.
+The inherited OpenSSH selection is removed: no level needs SSH, and its guest
+startup generated host keys before login. Check that `BR2_PACKAGE_OPENSSH` is
+unset in the final Buildroot config.
 The kernel fragment requests `CONFIG_NAMESPACES`, `CONFIG_NET_NS`, and
 `CONFIG_VETH` plus their networking, proc, and sysctl prerequisites. It also
 requests `CONFIG_NET_SCHED=y` and `CONFIG_NET_SCH_NETEM=y` for the real
@@ -180,3 +183,28 @@ scripts/03-package-payload.sh \
 The `payload/` tree includes `/root/.profile` for automatic installation and
 excludes developer solvers and tests. Boot-test that exact packaged pair in v86.
 Browser publication requires the complete packaged-image check.
+
+### Remove the inherited SSH startup delay
+
+The starting `basic-compression-networking` defconfig selected OpenSSH, which
+generated RSA host keys during guest boot. No networking level uses SSH. The
+current networking defconfig omits `BR2_PACKAGE_OPENSSH=y`. If an earlier
+networking image already contained OpenSSH, clean its **Buildroot output**
+before running stage 02: changing the selection alone may leave old package
+files in the incremental target tree. This clean step does not remove files in
+`config-sets/networking-prototype-v1/`.
+
+```sh
+git -C "$HOME/polylinux-networking" pull --ff-only
+sh "$HOME/polylinux-networking/install-builder-config.sh" \
+  --refresh "$HOME/buildroot-builder2"
+cd "$HOME/buildroot-builder2"
+. ./.polylinux-builder.env
+make -C "$BUILDROOT_SRC" O="$BUILD_DIR/networking-prototype-v1" clean
+scripts/02-build-baseline.sh --config networking-prototype-v1
+```
+
+Check the new artifact's `configs/final-buildroot.config` for
+`# BR2_PACKAGE_OPENSSH is not set`, then boot its exact kernel and rootfs pair
+to confirm the SSH key-generation message is gone. Stage 03 must use this new
+baseline artifact to carry the change into the packaged lab.

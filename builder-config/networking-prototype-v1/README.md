@@ -10,6 +10,11 @@ requests `clear`, `adduser`, `passwd`, and `su`. iproute2 supplies `tc`; the
 Linux fragment adds network namespaces, veth pairs, and netem scheduling for
 Level 9's real per-link delays.
 
+This lab does not use SSH. The inherited baseline's `BR2_PACKAGE_OPENSSH=y`
+selection has been removed so the guest does not generate SSH host keys during
+boot. Confirm `# BR2_PACKAGE_OPENSSH is not set` in the final Buildroot config
+when building from a refreshed profile.
+
 Use `../../install-builder-config.sh /path/to/buildroot-builder2` from this
 repository on the Linux build host. The installer copies this directory into
 `config-sets/networking-prototype-v1` and replaces the default-layout relative
