@@ -15,7 +15,9 @@ support later exercises. No public internet access is required.
 
 At boot, the root login runs the installer automatically. Enter your email
 address and confirm it; the lab uses that address and the exercise date to
-generate your scenario. The installer signs you into `level1`. Read
+generate your scenario. The installer displays an exercise code: the date's
+`YYYYMMDD` digits converted from decimal to uppercase hexadecimal. Save that
+code for the submission form. The installer signs you into `level1`. Read
 `README.txt`, then use `nextlevel` and `prevlevel` to move freely among the
 ten level accounts. Completing a level is not required to enter another.
 

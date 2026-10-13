@@ -5,6 +5,8 @@ All generated addresses are confined to the disposable VM. The level seed is
 SHA-256 of exact UTF-8 bytes `email + ISO_date + exercise_password + level_password`.
 Labeled SHA-256 derivations vary interface names, host values, ports, service
 names, codes, and the Level 9 code position. Formats and objectives stay fixed.
+The learner sees the exercise date as an uppercase hexadecimal code derived
+from decimal `YYYYMMDD`; this display does not change the ISO date in the seed.
 
 | Level | Primary skill | Live fixture and learner action | Exact answer shape |
 | --- | --- | --- | --- |

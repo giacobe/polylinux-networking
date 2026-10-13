@@ -18,6 +18,49 @@ normalize_email() {
         tr '[:upper:]' '[:lower:]'
 }
 
+# Match the exercise code displayed by the current PolyLinux labs. The ISO
+# date remains unchanged for answer generation.
+exercise_code_from_date() {
+    decimal=$(printf '%s' "$1" | tr -d '-')
+    printf '%X\n' "$decimal"
+}
+
+render_box_file() {
+    input=$1
+    output=$2
+    awk '
+        BEGIN {
+            width = 36
+            border = "****************************************"
+            print border
+        }
+        function boxed(text,    cut, i) {
+            if (text == "") {
+                printf "* %-36s *\n", ""
+                return
+            }
+            while (length(text) > width) {
+                cut = width
+                for (i = width; i > 1; i--)
+                    if (substr(text, i, 1) == " ") { cut = i - 1; break }
+                printf "* %-36s *\n", substr(text, 1, cut)
+                text = substr(text, cut + 1)
+                sub(/^[[:space:]]+/, "", text)
+            }
+            printf "* %-36s *\n", text
+        }
+        {
+            line = $0
+            if (line == "__POLYLINUX_DIVIDER__") { print border; next }
+            if (line ~ /^\*+[[:space:]]*$/) next
+            sub(/^\*[[:space:]]?/, "", line)
+            sub(/[[:space:]]?\*$/, "", line)
+            boxed(line)
+        }
+        END { print border }
+    ' "$input" > "$output"
+}
+
 prefix_for_hosts() {
     required=$1
     block=4
@@ -82,11 +125,15 @@ write_level_readme() {
     level_values "$1"
     home=${LEVEL_HOME:-$(level_home "$LEVEL")}
     mkdir -p "$home"
+    exercise_code=${EXERCISE_CODE:-$(exercise_code_from_date "$CURRENT_DATE")}
+    raw="$home/.README.raw.$$"
     {
         printf 'Level: level%s\n' "$LEVEL"
         printf 'PolyLinux: Networking from the Command Line\n'
         printf 'Participant: %s\n' "$USER_ID"
-        printf 'Exercise code: %s\n\n' "$(printf '%s' "$CURRENT_DATE" | tr -d '-')"
+        printf 'Exercise code: %s\n' "$exercise_code"
+        printf '%s\n' '__POLYLINUX_DIVIDER__'
+        printf 'Instructions for this level\n\n'
         case "$LEVEL" in
             1)
                 cat <<EOF
@@ -206,12 +253,15 @@ Resolve and connect to an internal service
 Resolve $DNS_NAME with nslookup, then request its /code.txt path on port
 $PORT with curl. This service runs on the virtual peer in this VM.
 
-Answer format: resolved-IPv4|HTTP-status|12-character-code.
+Answer format: IPv4|status|code
+Use the resolved address, decimal HTTP status, and 12-character code.
 EOF
                 ;;
         esac
         printf '\nSubmit the level answer through the external exercise grading form.\n'
-    } > "$home/README.txt"
+    } > "$raw"
+    render_box_file "$raw" "$home/README.txt"
+    rm -f "$raw"
 }
 
 # Called by each independent level script in a private staging directory.

@@ -17,6 +17,22 @@ case "$number" in 1|2|3|4|5|6|7|8|9|10) ;; *) die 'usage: sh verify.sh LEVEL' ;;
 ns=$(learner_ns "$number")
 readme=$(level_home "$number")/README.txt
 [ -f "$readme" ] || die "missing $readme"
+# Restore paragraphs from the learner's star-bordered README so wrapped
+# terminal lines do not change how the reference solver reads clues.
+instructions=$(awk '
+    /^\* / {
+        line = $0
+        sub(/^\* /, "", line)
+        sub(/ \*$/, "", line)
+        sub(/[[:space:]]+$/, "", line)
+        if (line == "") {
+            if (paragraph != "") { print paragraph; paragraph = "" }
+            next
+        }
+        paragraph = paragraph == "" ? line : paragraph " " line
+    }
+    END { if (paragraph != "") print paragraph }
+' "$readme")
 
 interface() {
     ip -n "$ns" -o link show | sed -n 's/^[0-9][0-9]*: \(lan[0-9][0-9]*\)@.*/\1/p' | head -n 1
@@ -37,14 +53,16 @@ case "$number" in
         ;;
     2)
         iface=$(interface)
-        octet=$(sed -n 's/.*host number \([0-9][0-9]*\) on.*/\1/p' "$readme")
+        octet=$(printf '%s\n' "$instructions" |
+            sed -n 's/.*host number \([0-9][0-9]*\) on.*/\1/p')
         [ -n "$octet" ] || die 'Level 2 host clue missing'
         ip -n "$ns" addr replace "192.0.2.$octet/24" dev "$iface"
         ip -n "$ns" -4 -o addr show dev "$iface" | awk '$3=="inet" {print $4}'
         ;;
     3)
         iface=$(interface)
-        hosts=$(sed -n 's/.*needs at least \([0-9][0-9]*\) usable.*/\1/p' "$readme")
+        hosts=$(printf '%s\n' "$instructions" |
+            sed -n 's/.*needs at least \([0-9][0-9]*\) usable.*/\1/p')
         [ -n "$hosts" ] || die 'Level 3 host clue missing'
         block=4; prefix=30
         while [ $((block - 2)) -lt "$hosts" ]; do
@@ -55,21 +73,25 @@ case "$number" in
         ;;
     4)
         iface=$(interface)
-        base=$(sed -n 's/^Allocate \([0-9.]*\)[.]0\/24.*/\1/p' "$readme")
+        base=$(printf '%s\n' "$instructions" |
+            sed -n 's/^Allocate \([0-9.]*\)[.]0\/24.*/\1/p')
         [ -n "$base" ] || die 'Level 4 parent clue missing'
         ip -n "$ns" addr replace "$base.193/27" dev "$iface"
         printf '%s.192/27\n' "$base"
         ;;
     5)
         iface=$(interface)
-        gateway=$(sed -n 's/.*router is \([0-9.]*\)[.]/\1/p' "$readme" | head -n 1)
+        gateway=$(printf '%s\n' "$instructions" |
+            sed -n 's/.*router is \([0-9.]*\)[.]/\1/p' | head -n 1)
         [ -n "$gateway" ] || die 'Level 5 gateway clue missing'
         ip -n "$ns" route replace default via "$gateway" dev "$iface"
         ip -n "$ns" route show default | awk '{print $3}'
         ;;
     6)
-        server=$(sed -n 's/^192[.]0[.]2[.]\([0-9][0-9]*\)[.] Then.*/192.0.2.\1/p' "$readme")
-        name=$(sed -n 's/.*resolve \([^[:space:]]*\)[.]/\1/p' "$readme" | head -n 1)
+        server=$(printf '%s\n' "$instructions" |
+            sed -n 's/.*nameserver to \(192[.]0[.]2[.][0-9][0-9]*\)[.] Then.*/\1/p')
+        name=$(printf '%s\n' "$instructions" |
+            sed -n 's/.*resolve \([^[:space:]]*\)[.]/\1/p' | head -n 1)
         [ -n "$server" ] && [ -n "$name" ] || die 'Level 6 clues missing'
         printf 'nameserver %s\n' "$server" > "/etc/netns/$ns/resolv.conf"
         lookup_ipv4 "$name"
@@ -83,7 +105,8 @@ case "$number" in
         printf '%s|%s|%s\n' "$address" "$gateway" "$server"
         ;;
     8)
-        gateway=$(sed -n 's/.*gateway \([0-9][0-9.]*\)[.] Then.*/\1/p' "$readme" | head -n 1)
+        gateway=$(printf '%s\n' "$instructions" |
+            sed -n 's/.*gateway \([0-9][0-9.]*\)[.] Then.*/\1/p' | head -n 1)
         ip netns exec "$ns" ping -c 1 -W 2 "$gateway" >/dev/null
         port=$(ip netns exec "$ns" ss -ltn |
             awk '$4 ~ /^127[.]0[.]0[.]1:/ {split($4,a,":"); print a[length(a)]; exit}')
@@ -97,8 +120,10 @@ case "$number" in
             sed -n 's/.*polylab[.]code[.]\([0-9a-f]\{12\}\)[.]alma[.]lab[.]test.*/\1/p'
         ;;
     10)
-        name=$(sed -n 's/^Resolve \([^[:space:]]*\) with.*/\1/p' "$readme")
-        port=$(sed -n 's/^\([0-9][0-9]*\) with curl.*/\1/p' "$readme")
+        name=$(printf '%s\n' "$instructions" |
+            sed -n 's/^Resolve \([^[:space:]]*\) with.*/\1/p')
+        port=$(printf '%s\n' "$instructions" |
+            sed -n 's/.*port \([0-9][0-9]*\) with curl.*/\1/p')
         [ -n "$name" ] && [ -n "$port" ] || die 'Level 10 clues missing'
         address=$(lookup_ipv4 "$name")
         response=$(ip netns exec "$ns" curl -sS -w '\n%{http_code}\n' \

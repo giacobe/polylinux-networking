@@ -39,15 +39,16 @@ grep -Fqx "BR2_PACKAGE_BUSYBOX_CONFIG_FRAGMENT_FILES=\"$profile_dir/busybox.frag
 grep -Fqx "BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES=\"$profile_dir/linux.fragment\"" \
     "$profile_dir/features.fragment"
 
-USER_ID=student@example.edu CURRENT_DATE=2026-10-11 \
-    NETLAB_ROOT="$case_root/first" sh install.sh --dry-run --non-interactive >/dev/null
+install_output=$(USER_ID=student@example.edu CURRENT_DATE=2026-10-11 \
+    NETLAB_ROOT="$case_root/first" sh install.sh --dry-run --non-interactive)
+printf '%s\n' "$install_output" | grep -Fqx 'Exercise code: 1352893'
 USER_ID=student@example.edu CURRENT_DATE=2026-10-11 \
     NETLAB_ROOT="$case_root/repeat" sh install.sh --dry-run --non-interactive >/dev/null
 diff -r "$case_root/first/home" "$case_root/repeat/home" >/dev/null
 printf 'invalid\n Student@Example.edu \ny\n' | \
     CURRENT_DATE=2026-10-11 NETLAB_ROOT="$case_root/interactive" \
     sh install.sh --dry-run >/dev/null
-grep -q '^Participant: student@example.edu$' \
+grep -Fq '* Participant: student@example.edu' \
     "$case_root/interactive/home/level1/README.txt"
 
 USER_ID=other@example.edu CURRENT_DATE=2026-10-11 \
@@ -69,8 +70,14 @@ fi
 [ "$(wc -l < data/alma-hop-hostnames.txt)" -eq 8 ]
 ! grep -i 'bad[.]horse' data/alma-hop-hostnames.txt
 for number in 1 2 3 4 5 6 7 8 9 10; do
-    [ -s "$case_root/first/home/level$number/README.txt" ]
+    readme="$case_root/first/home/level$number/README.txt"
+    [ -s "$readme" ]
+    awk 'length($0) != 40 || $0 !~ /^\*/ || $0 !~ /\*$/ { exit 1 }' "$readme"
+    grep -Fq "* Level: level$number" "$readme"
+    grep -Fq '* Exercise code: 1352893' "$readme"
+    grep -Fq '* Instructions for this level' "$readme"
 done
+grep -Fq '* Exercise code: 1352894' "$case_root/later/home/level1/README.txt"
 
 USER_ID=student@example.edu
 CURRENT_DATE=2026-10-11
@@ -97,7 +104,7 @@ printf 'setup_story_level() { number=8; }\n' > "$case_root/mock-topology/topolog
     export INSTALL_MODE INSTALL_ROOT LEVEL_HOME
     generate_level 9
 )
-grep -Fqx 'Level: level9' "$case_root/mock-level9/README.txt"
+grep -Fq '* Level: level9' "$case_root/mock-level9/README.txt"
 grep -Fq 'Traceroute and reverse DNS' "$case_root/mock-level9/README.txt"
 
 INSTALL_ROOT=$(pwd)
@@ -115,7 +122,7 @@ grep -q '^address=/trace[.]lab[.]test/198[.]51[.]100[.]34$' \
 ! grep -q '^ptr-record=' "$NETLAB_ROOT/dns/level9.conf"
 awk -F, '/^host-record=/ { expected = 4 * count + 2; if ($2 != "198.51.100." expected) exit 1; count++ } END { if (count != 9) exit 1 }' \
     "$NETLAB_ROOT/dns/level9.conf"
-grep -q 'The next-hop router is' "$case_root/first/home/level9/README.txt"
+grep -Fq '198.51.100.2' "$case_root/first/home/level9/README.txt"
 [ -f .profile ] && [ -f profile ] && [ -f polylinux-colors.sh ]
 grep -q 'exec sh /root/install.sh' .profile
 grep -q 'su - "level$number"' labctl

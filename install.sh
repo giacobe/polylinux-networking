@@ -48,7 +48,9 @@ fi
 USER_ID=$(normalize_email "$raw_user")
 validate_email "$USER_ID" || die 'USER_ID must be a complete email address'
 validate_date "$CURRENT_DATE" || die 'CURRENT_DATE must be YYYY-MM-DD'
-export USER_ID
+EXERCISE_CODE=$(exercise_code_from_date "$CURRENT_DATE")
+export USER_ID EXERCISE_CODE
+printf 'Exercise code: %s\n' "$EXERCISE_CODE"
 
 for command in awk cat chmod chown cp cut date grep id ln mkdir mv printf \
     rm sed sha256sum sleep tr; do need "$command"; done
@@ -123,11 +125,13 @@ prepare_accounts() {
             *) die "refusing unexpected level home: $home" ;;
         esac
         mkdir -p "$home"
-        cat > "$home/README.txt" <<EOF
+        cat > "$home/.README.pending.$$" <<EOF
 Level $number is still preparing.
 
 You may use nextlevel or prevlevel and return shortly.
 EOF
+        render_box_file "$home/.README.pending.$$" "$home/README.txt"
+        rm -f "$home/.README.pending.$$"
         if [ "$INSTALL_MODE" = live ]; then
             chown -R "$account:$account" "$home"
             chmod 700 "$home"
@@ -162,7 +166,9 @@ build_one() (
     {
         echo "Level $number could not be prepared."
         printf 'Report this level and the build log: %s\n' "$NETLAB_ROOT/logs/$account.log"
-    } > "$final_home/README.txt"
+    } > "$final_home/.README.failed.$$"
+    render_box_file "$final_home/.README.failed.$$" "$final_home/README.txt"
+    rm -f "$final_home/.README.failed.$$"
     if [ "$INSTALL_MODE" = live ]; then
         chown "$account:$account" "$final_home/README.txt"
     fi

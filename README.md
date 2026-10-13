@@ -9,7 +9,9 @@ service. Each `levelN` account has its own network namespace.
 
 The runtime payload includes `/root/.profile`, which runs `/root/install.sh`
 on root login. The installer asks for and confirms the learner's email, records
-an ISO exercise date, creates `level1` through `level10`, prepares a pending
+an ISO exercise date, and displays its uppercase hexadecimal exercise code
+(`YYYYMMDD` interpreted as decimal before conversion). The ISO date remains
+the seed input. The installer creates `level1` through `level10`, prepares a pending
 `README.txt` in every home, and starts ten independent level builders. It
 logs into `level1` when that level is ready. `nextlevel` and `prevlevel`
 switch both the account and its network namespace. Login instructions come
