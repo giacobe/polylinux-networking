@@ -30,34 +30,47 @@ render_box_file() {
     output=$2
     awk '
         BEGIN {
-            width = 36
-            border = "****************************************"
+            width = 76
+            for (i = 1; i <= 80; i++) border = border "*"
             print border
         }
         function boxed(text,    cut, i) {
             if (text == "") {
-                printf "* %-36s *\n", ""
+                printf "* %-76s *\n", ""
                 return
             }
             while (length(text) > width) {
                 cut = width
-                for (i = width; i > 1; i--)
+                for (i = width + 1; i > 1; i--)
                     if (substr(text, i, 1) == " ") { cut = i - 1; break }
-                printf "* %-36s *\n", substr(text, 1, cut)
+                printf "* %-76s *\n", substr(text, 1, cut)
                 text = substr(text, cut + 1)
                 sub(/^[[:space:]]+/, "", text)
             }
-            printf "* %-36s *\n", text
+            printf "* %-76s *\n", text
+        }
+        function flush_paragraph() {
+            if (paragraph != "") { boxed(paragraph); paragraph = "" }
         }
         {
             line = $0
-            if (line == "__POLYLINUX_DIVIDER__") { print border; next }
+            if (line == "__POLYLINUX_DIVIDER__") {
+                flush_paragraph()
+                print border
+                body = 1
+                next
+            }
             if (line ~ /^\*+[[:space:]]*$/) next
             sub(/^\*[[:space:]]?/, "", line)
             sub(/[[:space:]]?\*$/, "", line)
-            boxed(line)
+            if (!body) { boxed(line); next }
+            if (line == "") { flush_paragraph(); boxed(""); next }
+            if (line ~ /^  /) { flush_paragraph(); boxed(line); next }
+            sub(/^[[:space:]]+/, "", line)
+            sub(/[[:space:]]+$/, "", line)
+            paragraph = paragraph == "" ? line : paragraph " " line
         }
-        END { print border }
+        END { flush_paragraph(); print border }
     ' "$input" > "$output"
 }
 
@@ -143,6 +156,7 @@ The lab interface is down. Inspect links, bring the lab interface up, and
 confirm that it reports UP. Submit its exact interface name.
 
 Commands: ip -br link; ip link set dev INTERFACE up
+
 Answer format: interface name, lowercase, no spaces.
 EOF
                 ;;
@@ -179,6 +193,7 @@ largest requirement first; use the smallest suitable subnet for each.
   Sensors: 20 usable hosts
 
 Configure the first usable Sensors address on $IFACE.
+
 Answer format: Sensors network/prefix, for example $L4_BASE.192/27.
 EOF
                 ;;
@@ -201,7 +216,9 @@ The resolver setting in this level is incorrect. Set its nameserver to
 192.0.2.$GATEWAY_OCTET. Then use nslookup to resolve $DNS_NAME.
 
 Use /etc/resolv.conf inside this level's shell; the file is isolated from
-other levels. Answer format: resolved IPv4 address only.
+other levels.
+
+Answer format: resolved IPv4 address only.
 EOF
                 ;;
             7)
@@ -209,8 +226,12 @@ EOF
 DHCP versus a manual address
 
 $IFACE starts without an address. The router offers DHCP on this link.
-Run udhcpc on $IFACE, then inspect the resulting IPv4 address, default
-route, and resolver. Compare them with the manual settings in Level 2.
+
+Request a lease:
+  udhcpc -i $IFACE -n -q
+
+Inspect the resulting IPv4 address, default route, and resolver. Compare
+them with the manual settings in Level 2.
 
 Answer format: leased-IPv4|gateway-IPv4|DNS-IPv4, with literal pipes.
 EOF
@@ -220,8 +241,11 @@ EOF
 Local reachability and a listening service
 
 First ping the gateway 192.0.2.$GATEWAY_OCTET. Then inspect TCP listeners
-with ss -ltn. A small web service listens only on 127.0.0.1. Identify
-its port, and use curl to confirm the local response.
+with ss -ltn.
+
+A small web service listens only on 127.0.0.1.
+
+Identify its port and use curl to confirm the local response.
 
 Answer format: decimal TCP port only.
 EOF
@@ -230,31 +254,36 @@ EOF
                 cat <<EOF
 Traceroute and reverse DNS
 
-The local interface e0a has 198.51.100.1/30. The next-hop router is
-198.51.100.2 (not your own .1 address). Add a default route through .2,
-then ping .2 and compare:
+On e0a, your address is 198.51.100.1/30.
+
+Use 198.51.100.2 as the next-hop router. The .1 address is your own.
+
+Add a default route through .2, ping .2, and compare:
 
   traceroute -n trace.lab.test
   traceroute trace.lab.test
 
-The resolver at .2 supplies full names ending in .alma.lab.test. A short
-fragment such as for.the.glory is not a complete DNS name. Use nslookup
+The resolver at .2 supplies full names ending in .alma.lab.test.
+
+A fragment such as for.the.glory is not a complete DNS name. Use nslookup
 on a hop IP address to inspect its reverse DNS name if needed.
 
-The named hops follow eight lines of Penn State's alma mater. One extra
-PolyLab code line appears between the first and last lyric lines. Submit
-only its code: exactly 12 lowercase hexadecimal characters.
+The named hops follow eight lines of Penn State's alma mater.
+
+One PolyLab code line appears between the first and last lyric lines.
+
+Answer format: exactly 12 lowercase hexadecimal characters.
 EOF
                 ;;
             10)
                 cat <<EOF
 Resolve and connect to an internal service
 
-Resolve $DNS_NAME with nslookup, then request its /code.txt path on port
-$PORT with curl. This service runs on the virtual peer in this VM.
+Resolve $DNS_NAME with nslookup.
 
-Answer format: IPv4|status|code
-Use the resolved address, decimal HTTP status, and 12-character code.
+Use curl to request /code.txt on port $PORT from the virtual peer in this VM.
+
+Answer format: resolved-IPv4|HTTP-status|12-character-code.
 EOF
                 ;;
         esac

@@ -94,12 +94,17 @@ fi
 for number in 1 2 3 4 5 6 7 8 9 10; do
     readme="$case_root/first/home/level$number/README.txt"
     [ -s "$readme" ]
-    awk 'length($0) != 40 || $0 !~ /^\*/ || $0 !~ /\*$/ { exit 1 }' "$readme"
+    awk 'length($0) != 80 || $0 !~ /^\*/ || $0 !~ /\*$/ { exit 1 }' "$readme"
     grep -Fq "* Level: level$number" "$readme"
     grep -Fq '* Exercise code: 1352893' "$readme"
     grep -Fq '* Instructions for this level' "$readme"
+    awk '/Answer format:/ && $0 !~ /^\* Answer format:/ { exit 1 }' "$readme"
 done
 grep -Fq '* Exercise code: 1352894' "$case_root/later/home/level1/README.txt"
+grep -Fq '* The resolver at .2 supplies full names ending in .alma.lab.test.' \
+    "$case_root/first/home/level9/README.txt"
+grep -Fq '* One PolyLab code line appears between the first and last lyric lines.' \
+    "$case_root/first/home/level9/README.txt"
 
 USER_ID=student@example.edu
 CURRENT_DATE=2026-10-11

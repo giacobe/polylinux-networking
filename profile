@@ -21,12 +21,12 @@ export PS1
 nextlevel() { . /usr/bin/nextlevel; }
 prevlevel() { . /usr/bin/prevlevel; }
 cd "$HOME" || exit 1
-box_line() { printf '* %-36.36s *\n' "$1"; }
-echo '****************************************'
-box_line 'PolyLinux: Networking'
+box_line() { printf '* %-76.76s *\n' "$1"; }
+border=$(printf '%80s' '' | tr ' ' '*')
+printf '%s\n' "$border"
+box_line 'PolyLinux: Networking from the Command Line'
 box_line 'Read README.txt to begin.'
-box_line 'Submit answers to the exercise'
-box_line 'grading form.'
-box_line 'Use nextlevel and prevlevel.'
-echo '****************************************'
+box_line 'Submit answers through the exercise grading form.'
+box_line 'Use nextlevel and prevlevel to move between accounts.'
+printf '%s\n' "$border"
 cat README.txt

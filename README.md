@@ -17,6 +17,9 @@ logs into `level1` when that level is ready. `nextlevel` and `prevlevel`
 switch both the account and its network namespace. Login instructions come
 from `/etc/profile`; the canonical color palette is installed in
 `/etc/profile.d/polylinux-colors.sh`.
+The account banner and each level's instructions use 80-character star boxes.
+Instruction paragraphs reflow to that width; indented command examples stay
+on separate lines.
 
 Learners can run `ip` and `udhcpc` in their own accounts. Read-only commands
 run directly; the small root-owned helpers permit only the network changes
