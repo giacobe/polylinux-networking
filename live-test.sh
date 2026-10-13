@@ -78,8 +78,10 @@ numeric=$(ip netns exec pln-l9 traceroute -n -m 12 -q 1 trace.lab.test)
 if printf '%s\n' "$named" | grep -qi 'bad[.]horse'; then
     die 'unrelated traceroute wording leaked into Level 9'
 fi
+first_hop_name=$(awk -F '[=,]' '/^host-record=/ { print $2; exit }' \
+    "$NETLAB_ROOT/dns/level9.conf")
 ip netns exec pln-l9 nslookup 198.51.100.1 |
-    grep -q 'for.the.glory.of.old.state' ||
+    grep -Fq "$first_hop_name" ||
     die 'Level 9 first-hop reverse DNS is missing'
 for link in 0 1 2 3 4 5 6 7 8; do
     if [ "$link" -eq 0 ]; then left_ns=pln-l9

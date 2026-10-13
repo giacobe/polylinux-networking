@@ -160,8 +160,23 @@ story_link_delay_ms() {
     printf '%s\n' "$((10 + value % 191))"
 }
 
+story_variant_filename() {
+    case "$1" in
+        0) printf 'alma-opening.txt\n' ;;
+        1) printf 'alma-middle.txt\n' ;;
+        2) printf 'nittany-opening.txt\n' ;;
+        3) printf 'nittany-chorus.txt\n' ;;
+        4) printf 'fight-on-state.txt\n' ;;
+        5) printf 'victory-refrain.txt\n' ;;
+        *) die "unknown story variant: $1" ;;
+    esac
+}
+
 write_story_dns() {
     level_values 9
+    story_variant=$(( $(derive_byte story-variant) % 6 ))
+    story_file="$INSTALL_ROOT/data/story-hop-hostnames/$(story_variant_filename "$story_variant")"
+    [ -f "$story_file" ] || die "missing story variant: $story_file"
     story_config="$NETLAB_ROOT/dns/level9.conf"
     cat > "$story_config" <<EOF
 no-resolv
@@ -181,7 +196,7 @@ EOF
             hop=$((hop + 1))
             story_dns_record "polylab.code.$CODE" "$hop"
         fi
-    done < "$INSTALL_ROOT/data/alma-hop-hostnames.txt"
+    done < "$story_file"
     [ "$lyric_number" -eq 8 ] && [ "$hop" -eq 9 ] || die 'story requires eight lyric hops and one code hop'
 }
 

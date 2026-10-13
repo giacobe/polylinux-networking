@@ -264,14 +264,11 @@ Add a default route through .1, ping .1, and compare:
   traceroute trace.lab.test
 
 The resolver at .1 supplies each hop's full name. Link delays accumulate
-in the traceroute times.
+in the traceroute times. Use nslookup on a hop IP address to inspect its
+reverse DNS name if needed.
 
-A fragment such as for.the.glory is not a complete DNS name. Use nslookup
-on a hop IP address to inspect its reverse DNS name if needed.
-
-The named hops follow eight lines of Penn State's alma mater.
-
-One PolyLab code line appears between the first and last lyric lines.
+Eight named hops follow a single Penn State song passage in lyric order. One
+PolyLab code hop appears between the first and last lyric hops.
 
 Answer format: exactly 12 lowercase hexadecimal characters.
 EOF

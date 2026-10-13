@@ -36,7 +36,7 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-mkdir -p "$stage_dir/bin" "$stage_dir/data"
+mkdir -p "$stage_dir/bin" "$stage_dir/data/story-hop-hostnames"
 for file in LICENSE .profile profile polylinux-colors.sh install.sh \
     resources.sh topology.sh labctl nextlevel prevlevel network-ip.sh \
     network-udhcpc.sh dhcp-client.sh level1.sh level2.sh level3.sh level4.sh level5.sh \
@@ -45,7 +45,7 @@ for file in LICENSE .profile profile polylinux-colors.sh install.sh \
 done
 cp "$source_dir/bin/udhcpc" "$stage_dir/bin/udhcpc"
 cp "$source_dir/bin/ip" "$stage_dir/bin/ip"
-cp "$source_dir/data/alma-hop-hostnames.txt" "$stage_dir/data/alma-hop-hostnames.txt"
+cp "$source_dir"/data/story-hop-hostnames/*.txt "$stage_dir/data/story-hop-hostnames/"
 
 python3 "$builder_dir/scripts/package_rootfs_payload.py" \
     --bzimage "$baseline_dir/images/bzImage" \

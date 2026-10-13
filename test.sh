@@ -94,9 +94,17 @@ if cmp -s "$case_root/first/home/level10/README.txt" \
     exit 1
 fi
 
-[ "$(wc -l < data/alma-hop-hostnames.txt)" -eq 8 ]
-! grep -i 'bad[.]horse' data/alma-hop-hostnames.txt
-! grep -Fq 'alma.lab.test' data/alma-hop-hostnames.txt
+story_count=0
+for story_file in data/story-hop-hostnames/*.txt; do
+    story_count=$((story_count + 1))
+    [ "$(wc -l < "$story_file")" -eq 8 ]
+    [ "$(sort -u "$story_file" | wc -l)" -eq 8 ]
+    awk 'length($0) > 253 || $0 !~ /^[a-z0-9]+([.][a-z0-9]+)+$/ { exit 1 }
+        { n = split($0, labels, "."); for (i = 1; i <= n; i++) if (length(labels[i]) > 63) exit 1 }' \
+        "$story_file"
+    ! grep -i 'bad[.]horse\|alma[.]lab[.]test' "$story_file"
+done
+[ "$story_count" -eq 6 ]
 for number in 1 2 3 4 5 6 7 8 9 10; do
     readme="$case_root/first/home/level$number/README.txt"
     [ -s "$readme" ]
@@ -109,7 +117,7 @@ done
 grep -Fq '* Exercise code: 1352894' "$case_root/later/home/level1/README.txt"
 grep -Fq "* The resolver at .1 supplies each hop's full name." \
     "$case_root/first/home/level9/README.txt"
-grep -Fq '* One PolyLab code line appears between the first and last lyric lines.' \
+grep -Fq 'PolyLab code hop appears between the first and last lyric hops.' \
     "$case_root/first/home/level9/README.txt"
 
 USER_ID=student@example.edu
@@ -166,9 +174,31 @@ grep -q '^address=/trace[.]lab[.]test/198[.]51[.]100[.]34$' \
 ! grep -q '^ptr-record=' "$NETLAB_ROOT/dns/level9.conf"
 awk -F, '/^host-record=/ { expected = count == 0 ? 1 : 4 * count + 2; if ($2 != "198.51.100." expected) exit 1; count++ } END { if (count != 9) exit 1 }' \
     "$NETLAB_ROOT/dns/level9.conf"
-grep -Fq 'host-record=for.the.glory.of.old.state,198.51.100.1' \
+selected_story="$INSTALL_ROOT/data/story-hop-hostnames/$(story_variant_filename "$story_variant")"
+first_name=$(sed -n '1p' "$selected_story")
+grep -Fq "host-record=$first_name,198.51.100.1" \
     "$NETLAB_ROOT/dns/level9.conf"
 ! grep -Fq 'alma.lab.test' "$NETLAB_ROOT/dns/level9.conf"
+seen_variants=' '
+for seed_number in $(seq 1 60); do
+    USER_ID="student${seed_number}@example.edu"
+    write_story_dns
+    case "$seen_variants" in
+        *" $story_variant "*) ;;
+        *) seen_variants="$seen_variants$story_variant " ;;
+    esac
+    selected_story="$INSTALL_ROOT/data/story-hop-hostnames/$(story_variant_filename "$story_variant")"
+    awk -F '[=,]' '/^host-record=/ && $2 !~ /^polylab[.]code[.]/ { print $2 }' \
+        "$NETLAB_ROOT/dns/level9.conf" > "$case_root/emitted-story.txt"
+    cmp -s "$selected_story" "$case_root/emitted-story.txt"
+    [ "$(grep -c '^host-record=polylab[.]code[.]' "$NETLAB_ROOT/dns/level9.conf")" -eq 1 ]
+    position=$(awk '/^host-record=/ { count++; if ($0 ~ /^host-record=polylab[.]code[.]/) print count }' \
+        "$NETLAB_ROOT/dns/level9.conf")
+    [ "$position" -eq $((INSERT_AFTER + 1)) ]
+done
+[ "$(printf '%s\n' "$seen_variants" | wc -w)" -eq 6 ]
+USER_ID=student@example.edu
+write_story_dns
 grep -Fq '198.51.100.1' "$case_root/first/home/level9/README.txt"
 awk '/^clear$/ { cleared=1 } /^cat README[.]txt$/ { if (!cleared) exit 1; found=1 } END { if (!found) exit 1 }' profile
 
@@ -201,7 +231,12 @@ for file in LICENSE .profile profile polylinux-colors.sh install.sh resources.sh
     topology.sh labctl nextlevel prevlevel network-ip.sh network-udhcpc.sh \
     dhcp-client.sh level1.sh level2.sh level3.sh level4.sh level5.sh \
     level6.sh level7.sh level8.sh level9.sh level10.sh bin/ip bin/udhcpc \
-    data/alma-hop-hostnames.txt; do
+    data/story-hop-hostnames/alma-opening.txt \
+    data/story-hop-hostnames/alma-middle.txt \
+    data/story-hop-hostnames/nittany-opening.txt \
+    data/story-hop-hostnames/nittany-chorus.txt \
+    data/story-hop-hostnames/fight-on-state.txt \
+    data/story-hop-hostnames/victory-refrain.txt; do
     cmp -s "$file" "payload/$file" || {
         echo "runtime payload is stale: $file" >&2
         exit 1

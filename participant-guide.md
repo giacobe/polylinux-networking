@@ -57,8 +57,9 @@ each level's README.
 8. A successful ping does not tell you which TCP port a service listens on.
 9. Your `.2` address and the `.1` router share a /30 link. Ping that router,
    then compare numeric and named traces. Reverse DNS maps hop IPs to full
-   lyric names; partial fragments are not complete DNS names. Link delays
-   accumulate in traceroute RTTs. The extra line contains the PolyLab code.
+   names from one Penn State song in lyric order. Partial fragments are not
+   complete DNS names. Link delays accumulate in traceroute RTTs. The extra
+   hop contains the PolyLab code.
 10. Resolve the service name before requesting its HTTP path.
 
 ## Troubleshooting
