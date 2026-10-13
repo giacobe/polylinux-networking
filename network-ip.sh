@@ -18,12 +18,12 @@ case "$1:$2" in
             [ "$3" = dev ] && valid_iface "$4" &&
             { [ "$5" = up ] || [ "$5" = down ]; } || deny
         ;;
-    addr:add|addr:replace)
+    addr:add|addr:replace|address:add|address:replace)
         case "$SUDO_USER" in level2|level3|level4) ;; *) deny ;; esac
         [ "$#" -eq 5 ] && [ "$4" = dev ] && valid_iface "$5" || deny
         case "$3" in *.*.*.*/*) ;; *) deny ;; esac
         ;;
-    addr:flush)
+    addr:flush|address:flush)
         case "$SUDO_USER" in level2|level3|level4) ;; *) deny ;; esac
         [ "$#" -eq 4 ] && [ "$3" = dev ] && valid_iface "$4" || deny
         ;;

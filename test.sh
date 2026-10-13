@@ -23,6 +23,28 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
+# Run the learner-facing wrapper as a simulated unprivileged account. The
+# standard long spelling must reach the root-owned helper, not raw iproute2.
+mkdir -p "$case_root/mock-bin"
+cat > "$case_root/mock-bin/id" <<'EOF'
+#!/bin/sh
+[ "$1" = -u ] || exit 1
+printf '1000\n'
+EOF
+cat > "$case_root/mock-bin/sudo" <<'EOF'
+#!/bin/sh
+printf 'sudo'
+printf ' %s' "$@"
+printf '\n'
+EOF
+chmod 755 "$case_root/mock-bin/id" "$case_root/mock-bin/sudo"
+dispatch=$(PATH="$case_root/mock-bin:$PATH" sh bin/ip address add \
+    192.0.2.106/24 dev lan72)
+[ "$dispatch" = 'sudo -n /usr/local/sbin/polylinux-network-ip address add 192.0.2.106/24 dev lan72' ] || {
+    printf 'ip address add bypassed the network helper: %s\n' "$dispatch" >&2
+    exit 1
+}
+
 mkdir -p "$case_root/builder/scripts" "$case_root/builder/config-sets"
 : > "$case_root/builder/scripts/02-build-baseline.sh"
 sh install-builder-config.sh "$case_root/builder" >/dev/null

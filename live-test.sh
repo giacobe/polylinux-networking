@@ -26,8 +26,27 @@ for number in 1 2 3 4 5 6 7 8 9 10; do
         die "level$number login reached the wrong namespace: $login_ns"
 done
 printf 'Ten account login and namespace checks passed.\n'
+level_values 1
+ip netns exec pln-l1 su -c "PATH=/usr/local/bin:\$PATH ip link set dev $IFACE up" level1 >/dev/null ||
+    die 'Level 1 account cannot bring its interface up'
+level_values 2
+ip netns exec pln-l2 su -c "PATH=/usr/local/bin:\$PATH ip address add 192.0.2.$HOST_OCTET/24 dev $IFACE" level2 >/dev/null ||
+    die 'Level 2 account cannot assign an address with ip address add'
+level_values 3
+ip netns exec pln-l3 su -c "PATH=/usr/local/bin:\$PATH ip address add 198.51.100.1/$L3_PREFIX dev $IFACE" level3 >/dev/null ||
+    die 'Level 3 account cannot assign its subnet address'
+level_values 4
+ip netns exec pln-l4 su -c "PATH=/usr/local/bin:\$PATH ip address add $L4_BASE.193/27 dev $IFACE" level4 >/dev/null ||
+    die 'Level 4 account cannot assign its VLSM address'
+level_values 5
+ip netns exec pln-l5 su -c "PATH=/usr/local/bin:\$PATH ip route add default via 192.0.2.$GATEWAY_OCTET dev $IFACE" level5 >/dev/null ||
+    die 'Level 5 account cannot add its default route'
+level_values 7
+ip netns exec pln-l7 su -c "PATH=/usr/local/bin:\$PATH udhcpc -i $IFACE -n -q" level7 >/dev/null ||
+    die 'Level 7 account cannot request a DHCP lease'
 ip netns exec pln-l9 su -c 'PATH=/usr/local/bin:$PATH ip route replace default via 198.51.100.2 dev e0a' level9 >/dev/null ||
     die 'Level 9 account cannot configure its route through the network helper'
+printf 'Learner account network-change commands passed.\n'
 for number in 1 2 3 4 5 6 7 8 9 10; do
     level_values "$number"
     case "$number" in
